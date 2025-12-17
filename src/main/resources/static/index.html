@@ -33,28 +33,6 @@
         .bg-evergreen { background-color: var(--evergreen); }
         .bg-grey-cotton { background-color: var(--grey-cotton); }
         
-        /* Decorative SVG backgrounds */
-        .botanical-bg-top {
-            position: fixed;
-            top: 0;
-            right: 0;
-            width: 300px;
-            height: 300px;
-            opacity: 0.05;
-            z-index: -1;
-            pointer-events: none;
-        }
-        .botanical-bg-bottom {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            width: 300px;
-            height: 300px;
-            opacity: 0.05;
-            z-index: -1;
-            pointer-events: none;
-        }
-        
         .sticky-btn {
             position: fixed;
             bottom: 24px;
@@ -67,7 +45,7 @@
             transform: translateY(-2px);
             box-shadow: 0 15px 35px rgba(45, 58, 47, 0.25);
         }
-        .botanical-divider {
+        .divider {
             width: 80px;
             height: 1px;
             background: linear-gradient(to right, transparent, var(--seedling), transparent);
@@ -220,24 +198,6 @@
     </style>
 </head>
 <body class="antialiased">
-    <!-- Botanical decorative backgrounds -->
-    <svg class="botanical-bg-top" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <path fill="currentColor" class="text-seedling" d="M40,100 Q50,80 60,100 T80,100" stroke="currentColor" stroke-width="1" fill="none"/>
-        <path d="M100,50 Q110,70 100,90" stroke="currentColor" stroke-width="1" fill="none" class="text-seedling"/>
-        <circle cx="60" cy="100" r="3" fill="currentColor" class="text-seedling"/>
-        <circle cx="100" cy="50" r="3" fill="currentColor" class="text-seedling"/>
-        <path d="M120,80 Q130,70 140,80 Q150,90 160,80" stroke="currentColor" stroke-width="1" fill="none" class="text-seedling"/>
-        <path d="M80,120 L90,110 M90,110 L100,120 M90,110 L90,100" stroke="currentColor" stroke-width="1" class="text-seedling"/>
-    </svg>
-    
-    <svg class="botanical-bg-bottom" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
-        <path fill="currentColor" class="text-seedling" d="M160,100 Q150,120 140,100 T120,100" stroke="currentColor" stroke-width="1" fill="none"/>
-        <path d="M100,150 Q90,130 100,110" stroke="currentColor" stroke-width="1" fill="none" class="text-seedling"/>
-        <circle cx="140" cy="100" r="3" fill="currentColor" class="text-seedling"/>
-        <circle cx="100" cy="150" r="3" fill="currentColor" class="text-seedling"/>
-        <path d="M50,120 Q40,130 30,120 Q20,110 10,120" stroke="currentColor" stroke-width="1" fill="none" class="text-seedling"/>
-    </svg>
-
     <div id="loading" class="loading">
         <div>
             <div class="spinner mx-auto"></div>
@@ -258,7 +218,7 @@
                     <span class="text-5xl md:text-6xl italic text-seedling">&</span><br>
                     Luis Manuel
                 </h1>
-                <div class="botanical-divider"></div>
+                <div class="divider"></div>
                 <p class="text-evergreen text-lg md:text-xl font-light italic mb-8 leading-relaxed max-w-lg mx-auto">
                     Hay momentos que cobran sentido cuando se comparten con quienes más queremos.
                 </p>
@@ -508,7 +468,7 @@
                     </svg>
                 </div>
                 <h2 class="font-playfair text-4xl md:text-5xl mb-6">Código de Vestimenta</h2>
-                <div class="botanical-divider opacity-30"></div>
+                <div class="divider opacity-30"></div>
                 <p class="text-xl font-playfair italic mb-6">Formal</p>
                 <p class="text-base leading-relaxed max-w-lg mx-auto opacity-90">
                     Lo más importante para nosotros es que se sientan cómodos y disfruten al máximo nuestra celebración. 
