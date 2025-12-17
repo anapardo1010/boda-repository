@@ -28,6 +28,9 @@ public class Invitado {
     @Column(length = 500)
     private String mensaje = "";
     
+    @Column(length = 20)
+    private String telefono = "";
+    
     // Constructores
     public Invitado() {}
     
@@ -35,6 +38,13 @@ public class Invitado {
         this.slug = slug;
         this.nombreFamilia = nombreFamilia;
         this.pasesTotales = pasesTotales;
+    }
+    
+    public Invitado(String slug, String nombreFamilia, int pasesTotales, String telefono) {
+        this.slug = slug;
+        this.nombreFamilia = nombreFamilia;
+        this.pasesTotales = pasesTotales;
+        this.telefono = telefono;
     }
     
     // Getters y Setters
@@ -92,5 +102,13 @@ public class Invitado {
     
     public void setMensaje(String mensaje) {
         this.mensaje = mensaje;
+    }
+    
+    public String getTelefono() {
+        return telefono;
+    }
+    
+    public void setTelefono(String telefono) {
+        this.telefono = telefono;
     }
 }

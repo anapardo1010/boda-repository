@@ -15,8 +15,8 @@ public class DataLoader implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         // Cargar datos de prueba
-        invitadoRepository.save(new Invitado("familia-perez", "Familia Pérez", 4));
-        invitadoRepository.save(new Invitado("familia-garcia", "Familia García", 3));
-        invitadoRepository.save(new Invitado("familia-martinez", "Familia Martínez", 5));
+        invitadoRepository.save(new Invitado("familia-perez", "Familia Pérez", 4, "+52123456789"));
+        invitadoRepository.save(new Invitado("familia-garcia", "Familia García", 3, "+52987654321"));
+        invitadoRepository.save(new Invitado("familia-martinez", "Familia Martínez", 5, "+52555555555"));
     }
 }

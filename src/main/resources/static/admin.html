@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - Invitaciones de Boda</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .card {
+            backdrop-filter: blur(10px);
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .metric-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        
+        .metric-card.green {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .metric-card.blue {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+        }
+        
+        .metric-card.orange {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+        }
+        
+        .btn-whatsapp {
+            background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 50;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        
+        .modal.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .table-row:hover {
+            background-color: #f9fafb;
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .status-confirmed {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-pending {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Header -->
+    <header class="bg-white shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900">💒 Dashboard Admin</h1>
+                    <p class="text-gray-600 mt-1">Gestión de Invitaciones de Boda</p>
+                </div>
+                <button onclick="showAddModal()" class="btn-primary text-white px-6 py-3 rounded-lg font-semibold">
+                    + Agregar Invitado
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Métricas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+            <div class="card metric-card p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/80 text-sm font-medium">Total Familias</p>
+                        <p id="metric-total" class="text-3xl font-bold mt-2">0</p>
+                    </div>
+                    <div class="text-5xl opacity-20">👥</div>
+                </div>
+            </div>
+            
+            <div class="card metric-card green p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/80 text-sm font-medium">Confirmados</p>
+                        <p id="metric-confirmados" class="text-3xl font-bold mt-2">0</p>
+                    </div>
+                    <div class="text-5xl opacity-20">✓</div>
+                </div>
+            </div>
+            
+            <div class="card metric-card blue p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/80 text-sm font-medium">Total Pases</p>
+                        <p id="metric-pases" class="text-3xl font-bold mt-2">0</p>
+                    </div>
+                    <div class="text-5xl opacity-20">🎫</div>
+                </div>
+            </div>
+            
+            <div class="card metric-card orange p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-white/80 text-sm font-medium">% Confirmación</p>
+                        <p id="metric-porcentaje" class="text-3xl font-bold mt-2">0%</p>
+                    </div>
+                    <div class="text-5xl opacity-20">📊</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabla de Invitados -->
+        <div class="card p-6">
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Lista de Invitados</h2>
+            
+            <div class="overflow-x-auto">
+                <table class="w-full">
+                    <thead>
+                        <tr class="border-b-2 border-gray-200">
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Familia</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Slug</th>
+                            <th class="text-left py-3 px-4 font-semibold text-gray-700">Teléfono</th>
+                            <th class="text-center py-3 px-4 font-semibold text-gray-700">Pases</th>
+                            <th class="text-center py-3 px-4 font-semibold text-gray-700">Confirmados</th>
+                            <th class="text-center py-3 px-4 font-semibold text-gray-700">Estado</th>
+                            <th class="text-center py-3 px-4 font-semibold text-gray-700">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="invitados-table">
+                        <!-- Filas dinámicas -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Modal Agregar/Editar -->
+    <div id="modal-form" class="modal">
+        <div class="card max-w-md w-full mx-4 p-6">
+            <h3 id="modal-title" class="text-2xl font-bold text-gray-900 mb-4">Agregar Invitado</h3>
+            
+            <form id="invitado-form" class="space-y-4">
+                <input type="hidden" id="invitado-id">
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Nombre de Familia</label>
+                    <input type="text" id="nombreFamilia" required 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                           placeholder="Familia Pérez">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Slug (para URL)</label>
+                    <input type="text" id="slug" required 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                           placeholder="familia-perez">
+                    <p class="text-xs text-gray-500 mt-1">Solo letras minúsculas, números y guiones</p>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Teléfono (con código)</label>
+                    <input type="text" id="telefono" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                           placeholder="+52123456789">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Número de Pases</label>
+                    <input type="number" id="pasesTotales" required min="1" 
+                           class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                           placeholder="4">
+                </div>
+                
+                <div class="flex gap-3 mt-6">
+                    <button type="submit" class="btn-success flex-1 text-white px-6 py-3 rounded-lg font-semibold">
+                        Guardar
+                    </button>
+                    <button type="button" onclick="closeModal()" 
+                            class="flex-1 bg-gray-200 text-gray-700 px-6 py-3 rounded-lg font-semibold hover:bg-gray-300">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api/admin';
+        const APP_URL = window.location.origin;
+        
+        // Estado global
+        let invitados = [];
+        
+        // Inicializar
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            
+            document.getElementById('invitado-form').addEventListener('submit', handleSubmit);
+        });
+        
+        // Cargar datos
+        async function loadData() {
+            try {
+                // Cargar invitados
+                const invitadosRes = await fetch(`${API_BASE}/invitados`);
+                invitados = await invitadosRes.json();
+                renderTable();
+                
+                // Cargar métricas
+                const metricsRes = await fetch(`${API_BASE}/metrics`);
+                const metrics = await metricsRes.json();
+                updateMetrics(metrics);
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                alert('Error al cargar datos');
+            }
+        }
+        
+        // Actualizar métricas
+        function updateMetrics(metrics) {
+            document.getElementById('metric-total').textContent = metrics.totalInvitados;
+            document.getElementById('metric-confirmados').textContent = metrics.familiasConfirmadas;
+            document.getElementById('metric-pases').textContent = `${metrics.pasesConfirmados}/${metrics.totalPases}`;
+            document.getElementById('metric-porcentaje').textContent = `${Math.round(metrics.porcentajeConfirmacion)}%`;
+        }
+        
+        // Renderizar tabla
+        function renderTable() {
+            const tbody = document.getElementById('invitados-table');
+            tbody.innerHTML = invitados.map(inv => `
+                <tr class="table-row border-b border-gray-200">
+                    <td class="py-3 px-4 font-medium text-gray-900">${inv.nombreFamilia}</td>
+                    <td class="py-3 px-4 text-gray-600 font-mono text-sm">${inv.slug}</td>
+                    <td class="py-3 px-4 text-gray-600">${inv.telefono || '-'}</td>
+                    <td class="py-3 px-4 text-center font-semibold">${inv.pasesTotales}</td>
+                    <td class="py-3 px-4 text-center ${inv.pasesConfirmados > 0 ? 'text-green-600 font-semibold' : 'text-gray-400'}">
+                        ${inv.pasesConfirmados}
+                    </td>
+                    <td class="py-3 px-4 text-center">
+                        <span class="status-badge ${inv.confirmado ? 'status-confirmed' : 'status-pending'}">
+                            ${inv.confirmado ? 'Confirmado' : 'Pendiente'}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <div class="flex gap-2 justify-center">
+                            ${inv.telefono ? `
+                            <button onclick="sendWhatsApp('${inv.telefono}', '${inv.slug}', '${inv.nombreFamilia}')" 
+                                    class="btn-whatsapp text-white px-3 py-1 rounded text-sm font-medium"
+                                    title="Enviar WhatsApp">
+                                📱
+                            </button>` : ''}
+                            <button onclick="copyLink('${inv.slug}')" 
+                                    class="bg-blue-500 text-white px-3 py-1 rounded text-sm font-medium hover:bg-blue-600"
+                                    title="Copiar link">
+                                🔗
+                            </button>
+                            <button onclick="editInvitado(${inv.id})" 
+                                    class="bg-purple-500 text-white px-3 py-1 rounded text-sm font-medium hover:bg-purple-600"
+                                    title="Editar">
+                                ✏️
+                            </button>
+                            <button onclick="deleteInvitado(${inv.id}, '${inv.nombreFamilia}')" 
+                                    class="bg-red-500 text-white px-3 py-1 rounded text-sm font-medium hover:bg-red-600"
+                                    title="Eliminar">
+                                🗑️
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Enviar WhatsApp
+        function sendWhatsApp(telefono, slug, nombreFamilia) {
+            const link = `${APP_URL}/?id=${slug}`;
+            const mensaje = `¡Hola ${nombreFamilia}! 💒\n\n` +
+                          `Nos encantaría contar con su presencia en nuestra boda.\n\n` +
+                          `Puede confirmar su asistencia en el siguiente enlace:\n${link}\n\n` +
+                          `¡Esperamos verlos pronto! ❤️`;
+            
+            const whatsappUrl = `https://wa.me/${telefono.replace(/\D/g, '')}?text=${encodeURIComponent(mensaje)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+        
+        // Copiar link
+        function copyLink(slug) {
+            const link = `${APP_URL}/?id=${slug}`;
+            navigator.clipboard.writeText(link).then(() => {
+                alert('¡Link copiado al portapapeles!');
+            });
+        }
+        
+        // Mostrar modal agregar
+        function showAddModal() {
+            document.getElementById('modal-title').textContent = 'Agregar Invitado';
+            document.getElementById('invitado-form').reset();
+            document.getElementById('invitado-id').value = '';
+            document.getElementById('modal-form').classList.add('active');
+        }
+        
+        // Editar invitado
+        function editInvitado(id) {
+            const inv = invitados.find(i => i.id === id);
+            if (!inv) return;
+            
+            document.getElementById('modal-title').textContent = 'Editar Invitado';
+            document.getElementById('invitado-id').value = inv.id;
+            document.getElementById('nombreFamilia').value = inv.nombreFamilia;
+            document.getElementById('slug').value = inv.slug;
+            document.getElementById('telefono').value = inv.telefono || '';
+            document.getElementById('pasesTotales').value = inv.pasesTotales;
+            document.getElementById('modal-form').classList.add('active');
+        }
+        
+        // Cerrar modal
+        function closeModal() {
+            document.getElementById('modal-form').classList.remove('active');
+        }
+        
+        // Submit form
+        async function handleSubmit(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('invitado-id').value;
+            const invitado = {
+                nombreFamilia: document.getElementById('nombreFamilia').value,
+                slug: document.getElementById('slug').value,
+                telefono: document.getElementById('telefono').value,
+                pasesTotales: parseInt(document.getElementById('pasesTotales').value),
+                pasesConfirmados: 0,
+                confirmado: false,
+                mensaje: ''
+            };
+            
+            try {
+                let response;
+                if (id) {
+                    // Actualizar
+                    response = await fetch(`${API_BASE}/invitados/${id}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(invitado)
+                    });
+                } else {
+                    // Crear
+                    response = await fetch(`${API_BASE}/invitados`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(invitado)
+                    });
+                }
+                
+                if (response.ok) {
+                    closeModal();
+                    loadData();
+                    alert('¡Invitado guardado correctamente!');
+                } else {
+                    const error = await response.json();
+                    alert(error.error || 'Error al guardar');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al guardar invitado');
+            }
+        }
+        
+        // Eliminar invitado
+        async function deleteInvitado(id, nombre) {
+            if (!confirm(`¿Estás seguro de eliminar a ${nombre}?`)) return;
+            
+            try {
+                const response = await fetch(`${API_BASE}/invitados/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if (response.ok) {
+                    loadData();
+                    alert('Invitado eliminado correctamente');
+                } else {
+                    alert('Error al eliminar');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al eliminar invitado');
+            }
+        }
+    </script>
+</body>
+</html>
