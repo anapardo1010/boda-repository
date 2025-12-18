@@ -321,14 +321,24 @@
                             </div>
                         </div>
                         <div class="flex flex-col gap-2">
-                            ${inv.telefono?`<button onclick="sendWhatsApp('${inv.telefono}','${inv.slug}','${inv.nombreFamilia}')" 
-                                class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition-all">📱</button>`:''}
+                            ${inv.telefono?`
+                                <button onclick="sendWhatsApp('${inv.telefono}','${inv.slug}','${inv.nombreFamilia}')" 
+                                    class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition-all" title="Enviar invitación">
+                                    📱
+                                </button>
+                                ${inv.confirmado?`
+                                    <button onclick="sendReconfirmacion('${inv.telefono}','${inv.slug}','${inv.nombreFamilia}',${inv.pasesConfirmados})" 
+                                        class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-all" title="Reconfirmar asistencia">
+                                        🔔
+                                    </button>
+                                `:``}
+                            `:''}
                             <button onclick="copyLink('${inv.slug}')" 
-                                class="w-10 h-10 rounded-full bg-seedling text-white flex items-center justify-center hover:bg-evergreen transition-all">🔗</button>
+                                class="w-10 h-10 rounded-full bg-seedling text-white flex items-center justify-center hover:bg-evergreen transition-all" title="Copiar link">🔗</button>
                             <button onclick="editInvitado(${inv.id})" 
-                                class="w-10 h-10 rounded-full bg-grey-cotton text-evergreen flex items-center justify-center hover:bg-evergreen hover:text-white transition-all">✏️</button>
+                                class="w-10 h-10 rounded-full bg-grey-cotton text-evergreen flex items-center justify-center hover:bg-evergreen hover:text-white transition-all" title="Editar">✏️</button>
                             <button onclick="deleteInvitado(${inv.id},'${inv.nombreFamilia}')" 
-                                class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all">🗑️</button>
+                                class="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center hover:bg-red-500 hover:text-white transition-all" title="Eliminar">🗑️</button>
                         </div>
                     </div>
                 </div>
@@ -379,7 +389,14 @@
 
         function sendWhatsApp(telefono,slug,nombreFamilia){
             const link=`${APP_URL}/?id=${slug}`;
-            const mensaje=`Hay momentos que cobran sentido cuando se comparten con quienes más queremos. 🌿\n\n${nombreFamilia}, les hacemos llegar nuestra invitación digital para que nos acompañen el próximo 27 de junio de 2026:\n\n🔗 ${link}\n\nDentro podrán consultar el itinerario, la ubicación y confirmar el número de pases que utilizarán. Los esperamos con mucho cariño.`;
+            const mensaje=`Hay momentos que cobran sentido cuando se comparten con quienes más queremos. 🌿\n\n${nombreFamilia}, les hacemos llegar nuestra invitación digital para que nos acompañen en la celebración de nuestra unión el próximo 27 de junio de 2026:\n\n🔗 ${link}\n\nDentro podrán consultar el itinerario, la ubicación y confirmar el número de pases que utilizarán. Los esperamos con mucho cariño.`;
+            const whatsappUrl=`https://wa.me/${telefono.replace(/\D/g,'')}?text=${encodeURIComponent(mensaje)}`;
+            window.open(whatsappUrl,'_blank');
+        }
+
+        function sendReconfirmacion(telefono,slug,nombreFamilia,pasesConfirmados){
+            const link=`${APP_URL}/?id=${slug}`;
+            const mensaje=`${nombreFamilia}, 🌿\n\nFaltan solo unas semanas para nuestra boda y queremos confirmar nuevamente su asistencia.\n\nActualmente tienen confirmados ${pasesConfirmados} pases. Si necesitan modificar el número de invitados, pueden hacerlo en:\n\n🔗 ${link}\n\n¡Los esperamos con mucha ilusión el 27 de junio!`;
             const whatsappUrl=`https://wa.me/${telefono.replace(/\D/g,'')}?text=${encodeURIComponent(mensaje)}`;
             window.open(whatsappUrl,'_blank');
         }
