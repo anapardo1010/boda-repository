@@ -50,6 +50,14 @@
             background-color: var(--seedling);
             color: white;
         }
+        .filter-btn.active {
+            background-color: var(--seedling) !important;
+            color: white !important;
+        }
+        .filter-btn:hover {
+            background-color: var(--evergreen);
+            color: white;
+        }
         .message-card {
             border-left: 3px solid var(--seedling);
             background: white;
@@ -131,7 +139,20 @@
             </div>
 
             <div class="card p-6" data-aos="fade-up">
-                <h2 class="font-playfair text-2xl text-ebony mb-6">Resumen de Confirmaciones</h2>
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+                    <h2 class="font-playfair text-2xl text-ebony">Resumen de Confirmaciones</h2>
+                    <div class="flex gap-2">
+                        <button onclick="filterSummary('all')" id="filter-all" class="filter-btn active px-4 py-2 rounded-full text-sm font-medium transition-all bg-seedling text-white">
+                            Todos
+                        </button>
+                        <button onclick="filterSummary('confirmado')" id="filter-confirmado" class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all bg-grey-cotton text-evergreen">
+                            Confirmados
+                        </button>
+                        <button onclick="filterSummary('pendiente')" id="filter-pendiente" class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all bg-grey-cotton text-evergreen">
+                            Pendientes
+                        </button>
+                    </div>
+                </div>
                 <div class="space-y-3" id="summary-list">
                 </div>
             </div>
@@ -239,8 +260,36 @@
             document.getElementById('metric-pases').textContent=`${metrics.pasesConfirmados}/${metrics.totalPases}`;
             document.getElementById('metric-porcentaje').textContent=`${Math.round(metrics.porcentajeConfirmacion)}%`;
             
+            renderSummary('all');
+        }
+
+        function filterSummary(filter){
+            document.querySelectorAll('.filter-btn').forEach(btn=>btn.classList.remove('active'));
+            document.getElementById(`filter-${filter}`).classList.add('active');
+            renderSummary(filter);
+        }
+
+        function renderSummary(filter){
+            let filteredInvitados = invitados;
+            
+            if(filter === 'confirmado'){
+                filteredInvitados = invitados.filter(inv => inv.confirmado);
+            } else if(filter === 'pendiente'){
+                filteredInvitados = invitados.filter(inv => !inv.confirmado);
+            }
+            
             const summaryList=document.getElementById('summary-list');
-            summaryList.innerHTML=invitados.slice(0,10).map(inv=>`
+            
+            if(filteredInvitados.length === 0){
+                summaryList.innerHTML=`
+                    <div class="text-center py-8 text-evergreen opacity-60">
+                        <p>No hay invitados en esta categoría</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            summaryList.innerHTML=filteredInvitados.map(inv=>`
                 <div class="flex justify-between items-center py-2 border-b border-grey-cotton last:border-0">
                     <div>
                         <p class="font-medium text-evergreen">${inv.nombreFamilia}</p>
