@@ -330,7 +330,7 @@
 
         function sendWhatsApp(telefono,slug,nombreFamilia){
             const link=`${APP_URL}/?id=${slug}`;
-            const mensaje=`¡Hola ${nombreFamilia}! 💒\n\nNos encantaría contar con su presencia en nuestra boda.\n\nPuede confirmar su asistencia en el siguiente enlace:\n${link}\n\n¡Esperamos verlos pronto! ❤️`;
+            const mensaje=`Hay momentos que cobran sentido cuando se comparten con quienes más queremos. 🌿\n\n${nombreFamilia}, les hacemos llegar nuestra invitación digital para que nos acompañen el próximo 27 de junio de 2026:\n\n🔗 ${link}\n\nDentro podrán consultar el itinerario, la ubicación y confirmar el número de pases que utilizarán. Los esperamos con mucho cariño.`;
             const whatsappUrl=`https://wa.me/${telefono.replace(/\D/g,'')}?text=${encodeURIComponent(mensaje)}`;
             window.open(whatsappUrl,'_blank');
         }
