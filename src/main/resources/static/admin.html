@@ -322,12 +322,12 @@
                         </div>
                         <div class="flex flex-col gap-2">
                             ${inv.telefono?`
-                                <button onclick="sendWhatsApp('${inv.telefono}','${inv.slug}','${inv.nombreFamilia}')" 
+                                <button onclick="sendWhatsApp('${inv.telefono}','${inv.slug}','${inv.nombreFamilia}',${inv.pasesTotales})" 
                                     class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition-all" title="Enviar invitación">
                                     📱
                                 </button>
                                 ${inv.confirmado?`
-                                    <button onclick="sendReconfirmacion('${inv.telefono}','${inv.slug}','${inv.nombreFamilia}',${inv.pasesConfirmados})" 
+                                    <button onclick="sendReconfirmacion('${inv.telefono}','${inv.slug}','${inv.nombreFamilia}',${inv.pasesConfirmados},${inv.pasesTotales})" 
                                         class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-all" title="Reconfirmar asistencia">
                                         🔔
                                     </button>
@@ -387,16 +387,22 @@
             `).join('');
         }
 
-        function sendWhatsApp(telefono,slug,nombreFamilia){
+        function sendWhatsApp(telefono,slug,nombreFamilia,pasesTotales){
             const link=`${APP_URL}/?id=${slug}`;
-            const mensaje=`Hay momentos que cobran sentido cuando se comparten con quienes más queremos. 🌿\n\n${nombreFamilia}, les hacemos llegar nuestra invitación digital para que nos acompañen en la celebración de nuestra unión el próximo 27 de junio de 2026:\n\n🔗 ${link}\n\nDentro podrán consultar el itinerario, la ubicación y confirmar el número de pases que utilizarán. Los esperamos con mucho cariño.`;
+            const esSingular = pasesTotales === 1;
+            const mensaje = esSingular
+                ? `🌿 ${nombreFamilia}, te hacemos llegar nuestra invitación digital para que nos acompañes en la celebración de nuestra unión el próximo 27 de junio de 2026:\n\n🔗 ${link}\n\nDentro podrás consultar el itinerario, la ubicación y confirmar tu asistencia. Te esperamos con mucho cariño.`
+                : `🌿 ${nombreFamilia}, les hacemos llegar nuestra invitación digital para que nos acompañen en la celebración de nuestra unión el próximo 27 de junio de 2026:\n\n🔗 ${link}\n\nDentro podrán consultar el itinerario, la ubicación y confirmar el número de pases que utilizarán. Los esperamos con mucho cariño.`;
             const whatsappUrl=`https://wa.me/${telefono.replace(/\D/g,'')}?text=${encodeURIComponent(mensaje)}`;
             window.open(whatsappUrl,'_blank');
         }
 
-        function sendReconfirmacion(telefono,slug,nombreFamilia,pasesConfirmados){
+        function sendReconfirmacion(telefono,slug,nombreFamilia,pasesConfirmados,pasesTotales){
             const link=`${APP_URL}/?id=${slug}`;
-            const mensaje=`${nombreFamilia}, 🌿\n\nFaltan solo unas semanas para nuestra boda y queremos confirmar nuevamente su asistencia.\n\nActualmente tienen confirmados ${pasesConfirmados} pases. Si necesitan modificar el número de invitados, pueden hacerlo en:\n\n🔗 ${link}\n\n¡Los esperamos con mucha ilusión el 27 de junio!`;
+            const esSingular = pasesTotales === 1;
+            const mensaje = esSingular
+                ? `${nombreFamilia}, 🌿\n\nFaltan solo unas semanas para nuestra boda y queremos confirmar nuevamente tu asistencia.\n\nActualmente tienes confirmado ${pasesConfirmados} pase. Si necesitas modificarlo, puedes hacerlo en:\n\n🔗 ${link}\n\n¡Te esperamos con mucha ilusión el 27 de junio!`
+                : `${nombreFamilia}, 🌿\n\nFaltan solo unas semanas para nuestra boda y queremos confirmar nuevamente su asistencia.\n\nActualmente tienen confirmados ${pasesConfirmados} pases. Si necesitan modificar el número de invitados, pueden hacerlo en:\n\n🔗 ${link}\n\n¡Los esperamos con mucha ilusión el 27 de junio!`;
             const whatsappUrl=`https://wa.me/${telefono.replace(/\D/g,'')}?text=${encodeURIComponent(mensaje)}`;
             window.open(whatsappUrl,'_blank');
         }

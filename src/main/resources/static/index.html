@@ -272,8 +272,19 @@
         
         <section id="invitacion" class="py-24 px-6" data-aos="fade-up">
             <div class="max-w-2xl mx-auto text-center">
-                <h2 id="welcome-text" class="font-playfair text-4xl md:text-5xl text-ebony mb-6"></h2>
-                <p id="pases-text" class="text-evergreen text-lg mb-8"></p>
+                <h2 id="welcome-text" class="font-playfair text-4xl md:text-5xl text-ebony mb-8"></h2>
+                
+                <!-- Pases section with highlighted number -->
+                <div class="mb-8">
+                    <p class="text-evergreen text-base md:text-lg mb-4" id="pases-intro-text">Hemos reservado</p>
+                    <div class="flex items-center justify-center gap-4 mb-4">
+                        <div class="w-16 h-px bg-seedling opacity-40"></div>
+                        <p id="pases-number" class="font-playfair text-7xl md:text-8xl text-seedling font-bold"></p>
+                        <div class="w-16 h-px bg-seedling opacity-40"></div>
+                    </div>
+                    <p id="pases-suffix-text" class="font-playfair text-2xl md:text-3xl text-evergreen italic mb-2"></p>
+                    <p id="pases-ending-text" class="text-evergreen text-base md:text-lg"></p>
+                </div>
                 
                 <!-- Already confirmed message -->
                 <div id="already-confirmed" class="already-confirmed hidden mb-8" data-aos="zoom-in">
@@ -624,11 +635,19 @@
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('main-content').classList.remove('hidden');
             
+            const esSingular = currentInvitado.pasesTotales === 1;
+            
             document.getElementById('welcome-text').textContent = `¡Hola ${currentInvitado.nombreFamilia}!`;
-            document.getElementById('pases-text').textContent = `Hemos reservado ${currentInvitado.pasesTotales} lugar${currentInvitado.pasesTotales > 1 ? 'es' : ''} especialmente para ustedes.`;
+            
+            // Update pases display with highlighted number
+            document.getElementById('pases-number').textContent = currentInvitado.pasesTotales;
+            document.getElementById('pases-suffix-text').textContent = esSingular ? 'lugar' : 'lugares';
+            document.getElementById('pases-ending-text').textContent = esSingular 
+                ? 'especialmente para ti'
+                : 'especialmente para ustedes';
             
             document.getElementById('pases-input').max = currentInvitado.pasesTotales;
-            document.getElementById('pases-max').textContent = `Máximo ${currentInvitado.pasesTotales} persona${currentInvitado.pasesTotales > 1 ? 's' : ''}`;
+            document.getElementById('pases-max').textContent = `Máximo ${currentInvitado.pasesTotales} persona${esSingular ? '' : 's'}`;
             
             // Check if already confirmed
             if (currentInvitado.confirmado) {
