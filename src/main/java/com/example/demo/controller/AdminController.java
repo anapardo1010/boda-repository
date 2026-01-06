@@ -3,7 +3,6 @@ package com.example.demo.controller;
 import com.example.demo.entity.Invitado;
 import com.example.demo.entity.InvitadoPersona;
 import com.example.demo.repository.InvitadoRepository;
-import com.example.demo.repository.InvitadoPersonaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
@@ -14,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -25,9 +25,6 @@ public class AdminController {
     
     @Autowired
     private InvitadoRepository invitadoRepository;
-    
-    @Autowired
-    private InvitadoPersonaRepository invitadoPersonaRepository;
     
     /**
      * Obtiene todos los invitados
@@ -78,26 +75,19 @@ public class AdminController {
                     .body(Map.of("error", "Ya existe un invitado con ese slug"));
             }
             
-            // Extraer personas antes de guardar (para evitar cascade issues)
-            List<InvitadoPersona> personas = invitado.getPersonas();
-            invitado.setPersonas(null);
-            
-            Invitado saved = invitadoRepository.save(invitado);
-            
-            // Guardar personas si existen
-            if (personas != null && !personas.isEmpty()) {
-                for (InvitadoPersona persona : personas) {
-                    persona.setInvitado(saved);
+            // Configurar relación bidireccional correctamente
+            if (invitado.getPersonas() != null && !invitado.getPersonas().isEmpty()) {
+                for (InvitadoPersona persona : invitado.getPersonas()) {
+                    persona.setInvitado(invitado);
                     persona.setEsAdicional(false);
                     persona.setConfirmado(false);
-                    invitadoPersonaRepository.save(persona);
                 }
             }
             
-            // Recargar con personas
-            saved = invitadoRepository.findById(saved.getId()).orElse(saved);
+            Invitado saved = invitadoRepository.save(invitado);
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Error al crear invitado: " + e.getMessage()));
         }
@@ -126,29 +116,30 @@ public class AdminController {
             existingInv.setTelefono(invitado.getTelefono());
             existingInv.setPasesTotales(invitado.getPasesTotales());
             
-            // Manejar personas
-            List<InvitadoPersona> nuevasPersonas = invitado.getPersonas();
+            // Manejar personas: remover solo las pre-llenadas (no adicionales)
+            List<InvitadoPersona> personasActuales = new ArrayList<>(existingInv.getPersonas());
+            List<InvitadoPersona> personasAEliminar = personasActuales.stream()
+                .filter(p -> !p.getEsAdicional())
+                .collect(Collectors.toList());
             
-            if (nuevasPersonas != null) {
-                // Eliminar solo personas que no son adicionales (pre-llenadas por admin)
-                invitadoPersonaRepository.deleteByInvitadoIdAndEsAdicional(id, false);
-                
-                // Agregar nuevas personas
-                for (InvitadoPersona persona : nuevasPersonas) {
-                    if (persona.getNombreCompleto() != null && !persona.getNombreCompleto().trim().isEmpty()) {
-                        persona.setInvitado(existingInv);
-                        persona.setEsAdicional(false);
-                        persona.setConfirmado(false);
-                        invitadoPersonaRepository.save(persona);
+            existingInv.getPersonas().removeAll(personasAEliminar);
+            
+            // Agregar nuevas personas del admin
+            if (invitado.getPersonas() != null) {
+                for (InvitadoPersona nuevaPersona : invitado.getPersonas()) {
+                    if (nuevaPersona.getNombreCompleto() != null && !nuevaPersona.getNombreCompleto().trim().isEmpty()) {
+                        nuevaPersona.setInvitado(existingInv);
+                        nuevaPersona.setEsAdicional(false);
+                        nuevaPersona.setConfirmado(false);
+                        existingInv.getPersonas().add(nuevaPersona);
                     }
                 }
             }
             
             Invitado updated = invitadoRepository.save(existingInv);
-            // Recargar con personas
-            updated = invitadoRepository.findById(updated.getId()).orElse(updated);
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Error al actualizar: " + e.getMessage()));
         }
