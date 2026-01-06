@@ -61,8 +61,40 @@ public class InvitadoController {
             invitado.setConfirmado(request.getPasesConfirmados() > 0);
             invitado.setMensaje(request.getMensaje() != null ? request.getMensaje() : "");
             
-            // Guardar nombres de invitados
-            if (request.getNombresInvitados() != null && !request.getNombresInvitados().isEmpty()) {
+            // NUEVA LÓGICA: Manejar confirmaciones de personas específicas y adicionales
+            if (request.getPersonasEspecificas() != null) {
+                // Actualizar estado de confirmación de personas pre-llenadas
+                for (ConfirmacionRequest.PersonaConfirmacion pc : request.getPersonasEspecificas()) {
+                    Optional<InvitadoPersona> personaOpt = invitadoPersonaRepository.findById(pc.getPersonaId());
+                    if (personaOpt.isPresent()) {
+                        InvitadoPersona persona = personaOpt.get();
+                        persona.setConfirmado(pc.isConfirmado());
+                        invitadoPersonaRepository.save(persona);
+                    }
+                }
+            }
+            
+            // Manejar nombres adicionales (pases extra)
+            if (request.getNombresAdicionales() != null && !request.getNombresAdicionales().isEmpty()) {
+                // Primero eliminar personas adicionales anteriores
+                invitadoPersonaRepository.deleteByInvitadoIdAndEsAdicional(invitado.getId(), true);
+                
+                // Agregar nuevas personas adicionales
+                int maxOrden = invitadoPersonaRepository.findMaxOrdenByInvitadoId(invitado.getId());
+                for (int i = 0; i < request.getNombresAdicionales().size(); i++) {
+                    String nombre = request.getNombresAdicionales().get(i);
+                    if (nombre != null && !nombre.trim().isEmpty()) {
+                        InvitadoPersona persona = new InvitadoPersona(invitado, nombre.trim(), maxOrden + i + 1);
+                        persona.setEsAdicional(true);
+                        persona.setConfirmado(true); // Los adicionales siempre están confirmados
+                        invitadoPersonaRepository.save(persona);
+                    }
+                }
+            }
+            
+            // COMPATIBILIDAD: Si llega con la estructura antigua (nombresInvitados), manejarla
+            if (request.getNombresInvitados() != null && !request.getNombresInvitados().isEmpty() 
+                && request.getPersonasEspecificas() == null) {
                 // Eliminar nombres anteriores
                 invitadoPersonaRepository.deleteByInvitadoId(invitado.getId());
                 
@@ -71,6 +103,8 @@ public class InvitadoController {
                     String nombre = request.getNombresInvitados().get(i);
                     if (nombre != null && !nombre.trim().isEmpty()) {
                         InvitadoPersona persona = new InvitadoPersona(invitado, nombre.trim(), i + 1);
+                        persona.setConfirmado(true);
+                        persona.setEsAdicional(true);
                         invitadoPersonaRepository.save(persona);
                     }
                 }

@@ -22,6 +22,12 @@ public class InvitadoPersona {
     @Column(nullable = false)
     private Integer orden;
     
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private Boolean confirmado = false;
+    
+    @Column(nullable = false, columnDefinition = "boolean default false")
+    private Boolean esAdicional = false;  // True si fue agregado por el invitado, false si fue pre-llenado
+    
     // Constructors
     public InvitadoPersona() {}
     
@@ -29,6 +35,8 @@ public class InvitadoPersona {
         this.invitado = invitado;
         this.nombreCompleto = nombreCompleto;
         this.orden = orden;
+        this.confirmado = false;
+        this.esAdicional = false;
     }
     
     // Getters and Setters
@@ -62,5 +70,21 @@ public class InvitadoPersona {
     
     public void setOrden(Integer orden) {
         this.orden = orden;
+    }
+    
+    public Boolean getConfirmado() {
+        return confirmado;
+    }
+    
+    public void setConfirmado(Boolean confirmado) {
+        this.confirmado = confirmado;
+    }
+    
+    public Boolean getEsAdicional() {
+        return esAdicional;
+    }
+    
+    public void setEsAdicional(Boolean esAdicional) {
+        this.esAdicional = esAdicional;
     }
 }

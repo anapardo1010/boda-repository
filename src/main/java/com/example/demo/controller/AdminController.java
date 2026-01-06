@@ -3,7 +3,9 @@ package com.example.demo.controller;
 import com.example.demo.entity.Invitado;
 import com.example.demo.entity.InvitadoPersona;
 import com.example.demo.repository.InvitadoRepository;
+import com.example.demo.repository.InvitadoPersonaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpHeaders;
@@ -23,6 +25,9 @@ public class AdminController {
     
     @Autowired
     private InvitadoRepository invitadoRepository;
+    
+    @Autowired
+    private InvitadoPersonaRepository invitadoPersonaRepository;
     
     /**
      * Obtiene todos los invitados
@@ -64,6 +69,7 @@ public class AdminController {
      * POST /api/admin/invitados
      */
     @PostMapping("/invitados")
+    @Transactional
     public ResponseEntity<?> createInvitado(@RequestBody Invitado invitado) {
         try {
             // Validar que el slug no exista
@@ -72,7 +78,24 @@ public class AdminController {
                     .body(Map.of("error", "Ya existe un invitado con ese slug"));
             }
             
+            // Extraer personas antes de guardar (para evitar cascade issues)
+            List<InvitadoPersona> personas = invitado.getPersonas();
+            invitado.setPersonas(null);
+            
             Invitado saved = invitadoRepository.save(invitado);
+            
+            // Guardar personas si existen
+            if (personas != null && !personas.isEmpty()) {
+                for (InvitadoPersona persona : personas) {
+                    persona.setInvitado(saved);
+                    persona.setEsAdicional(false);
+                    persona.setConfirmado(false);
+                    invitadoPersonaRepository.save(persona);
+                }
+            }
+            
+            // Recargar con personas
+            saved = invitadoRepository.findById(saved.getId()).orElse(saved);
             return ResponseEntity.status(HttpStatus.CREATED).body(saved);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -85,6 +108,7 @@ public class AdminController {
      * PUT /api/admin/invitados/{id}
      */
     @PutMapping("/invitados/{id}")
+    @Transactional
     public ResponseEntity<?> updateInvitado(@PathVariable Long id, @RequestBody Invitado invitado) {
         Optional<Invitado> existing = invitadoRepository.findById(id);
         
@@ -94,8 +118,35 @@ public class AdminController {
         }
         
         try {
-            invitado.setId(id);
-            Invitado updated = invitadoRepository.save(invitado);
+            Invitado existingInv = existing.get();
+            
+            // Actualizar datos básicos
+            existingInv.setNombreFamilia(invitado.getNombreFamilia());
+            existingInv.setSlug(invitado.getSlug());
+            existingInv.setTelefono(invitado.getTelefono());
+            existingInv.setPasesTotales(invitado.getPasesTotales());
+            
+            // Manejar personas
+            List<InvitadoPersona> nuevasPersonas = invitado.getPersonas();
+            
+            if (nuevasPersonas != null) {
+                // Eliminar solo personas que no son adicionales (pre-llenadas por admin)
+                invitadoPersonaRepository.deleteByInvitadoIdAndEsAdicional(id, false);
+                
+                // Agregar nuevas personas
+                for (InvitadoPersona persona : nuevasPersonas) {
+                    if (persona.getNombreCompleto() != null && !persona.getNombreCompleto().trim().isEmpty()) {
+                        persona.setInvitado(existingInv);
+                        persona.setEsAdicional(false);
+                        persona.setConfirmado(false);
+                        invitadoPersonaRepository.save(persona);
+                    }
+                }
+            }
+            
+            Invitado updated = invitadoRepository.save(existingInv);
+            // Recargar con personas
+            updated = invitadoRepository.findById(updated.getId()).orElse(updated);
             return ResponseEntity.ok(updated);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)

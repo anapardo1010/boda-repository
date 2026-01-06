@@ -153,6 +153,61 @@
         .modal-overlay.active { display: flex; }
         .form-content.loading { opacity: 0.3; pointer-events: none; }
         
+        /* Toggle switch styles */
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+            flex-shrink: 0;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+            border-radius: 34px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background-color: var(--seedling);
+        }
+        input:checked + .toggle-slider:before {
+            transform: translateX(24px);
+        }
+        
+        /* Card styles for personas */
+        .persona-card {
+            transition: all 0.3s ease;
+        }
+        .persona-card:has(input:checked) {
+            background-color: #f0f9f4;
+            border-color: var(--seedling);
+        }
+        .pase-adicional-card:has(input:checked) {
+            background-color: #fef9f3;
+            border-color: var(--seedling);
+        }
+        
         /* Premium scroll spacing */
         section { scroll-margin-top: 2rem; }
         @media (max-width: 640px) {
@@ -543,7 +598,7 @@
     </div>
     
     <div id="modal-confirmacion" class="modal">
-        <div class="bg-white rounded-2xl max-w-md w-full mx-4 p-8 shadow-2xl relative">
+        <div class="bg-white rounded-2xl max-w-lg w-full mx-4 p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
             <div id="modal-loading" class="modal-overlay">
                 <div class="text-center">
                     <div class="spinner mx-auto mb-4"></div>
@@ -551,39 +606,57 @@
                 </div>
             </div>
             <div id="form-content" class="form-content">
-                <h3 class="font-playfair text-3xl text-ebony mb-6 text-center">Confirmar Asistencia</h3>
+                <h3 class="font-playfair text-3xl text-ebony mb-2 text-center">Confirmar Asistencia</h3>
+                <p class="text-sm text-evergreen opacity-70 text-center mb-6">Por favor confirma o declina por cada invitado</p>
+                
                 <form id="confirmation-form" class="space-y-6">
-                    <div>
-                        <label class="block text-sm font-medium text-evergreen mb-3">¿Cuántas personas asistirán?</label>
-                        <div class="flex items-center justify-center gap-4">
-                            <button type="button" onclick="decrementPases()" 
-                                    class="w-12 h-12 rounded-full bg-grey-cotton text-evergreen font-bold hover:bg-seedling hover:text-white transition-all">−</button>
-                            <input type="number" id="pases-input" name="pases" min="0" max="" value="0" readonly
-                                   class="w-20 text-center text-3xl font-playfair text-ebony focus:outline-none">
-                            <button type="button" onclick="incrementPases()" 
-                                    class="w-12 h-12 rounded-full bg-grey-cotton text-evergreen font-bold hover:bg-seedling hover:text-white transition-all">+</button>
-                        </div>
-                        <p id="pases-max" class="text-xs text-center text-evergreen opacity-70 mt-2"></p>
+                    <!-- Resumen de confirmación -->
+                    <div class="bg-grey-cotton rounded-xl p-4 text-center">
+                        <p class="text-sm text-evergreen mb-1">Confirmando</p>
+                        <p class="font-playfair text-3xl text-seedling">
+                            <span id="count-confirmados">0</span> de <span id="count-total">0</span>
+                        </p>
+                        <p class="text-xs text-evergreen opacity-70 mt-1">lugares disponibles</p>
                     </div>
                     
-                    <!-- Nombres de invitados -->
-                    <div id="nombres-container" class="hidden">
-                        <label class="block text-sm font-medium text-evergreen mb-2">Nombres de los invitados</label>
-                        <div id="nombres-list" class="space-y-2"></div>
+                    <!-- Invitados específicos -->
+                    <div id="invitados-especificos-container" class="hidden">
+                        <h4 class="font-medium text-evergreen mb-3 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-seedling" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                            </svg>
+                            Invitados
+                        </h4>
+                        <div id="invitados-especificos-list" class="space-y-2"></div>
                     </div>
                     
+                    <!-- Pases adicionales -->
+                    <div id="pases-adicionales-container" class="hidden">
+                        <h4 class="font-medium text-evergreen mb-3 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-seedling" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Pases Adicionales
+                            <span class="text-xs opacity-70">(opcional)</span>
+                        </h4>
+                        <p class="text-xs text-evergreen opacity-70 mb-3">Puedes agregar nombres para tus pases adicionales o dejarlos sin usar</p>
+                        <div id="pases-adicionales-list" class="space-y-2"></div>
+                    </div>
+                    
+                    <!-- Mensaje -->
                     <div>
                         <label for="mensaje" class="block text-sm font-medium text-evergreen mb-2">Mensaje especial (opcional)</label>
                         <textarea id="mensaje" name="mensaje" rows="3" placeholder="Escribe un mensaje para los novios..."
-                                  class="w-full px-4 py-3 border border-grey-cotton rounded-lg focus:ring-2 focus:ring-seedling focus:border-transparent resize-none"></textarea>
+                                  class="w-full px-4 py-3 border border-grey-cotton rounded-lg focus:ring-2 focus:ring-seedling focus:border-transparent resize-none text-sm"></textarea>
                     </div>
+                    
+                    <!-- Botones -->
                     <div class="flex gap-3">
                         <button type="submit" id="submit-btn"
                                 class="flex-1 bg-seedling text-white px-6 py-3 rounded-full font-medium hover:bg-evergreen transition-all">Confirmar</button>
                         <button type="button" onclick="closeModal()" 
                                 class="flex-1 bg-grey-cotton text-evergreen px-6 py-3 rounded-full font-medium hover:bg-evergreen hover:text-white transition-all">Cancelar</button>
                     </div>
-                    <div id="success-message" class="hidden text-center text-seedling font-medium">✓ ¡Confirmación enviada exitosamente!</div>
                     <div id="error-message" class="hidden text-center text-red-600 text-sm"></div>
                 </form>
             </div>
@@ -706,89 +779,148 @@
                 document.getElementById('mensaje').value = currentInvitado.mensaje;
             }
             
-            // Cargar pases confirmados si ya confirmó
-            if (currentInvitado.confirmado) {
-                document.getElementById('pases-input').value = currentInvitado.pasesConfirmados;
-                updateNombresInputs();
-            }
+            // Construir el modal con invitados específicos y pases adicionales
+            buildModalContent();
             
             document.getElementById('modal-confirmacion').classList.add('active');
         }
         
+        function buildModalContent() {
+            const personasPreLlenadas = currentInvitado.personas || [];
+            const pasesTotales = currentInvitado.pasesTotales;
+            const pasesAdicionales = pasesTotales - personasPreLlenadas.length;
+            
+            // Actualizar contador total
+            document.getElementById('count-total').textContent = pasesTotales;
+            
+            // 1. Invitados específicos (pre-llenados)
+            if (personasPreLlenadas.length > 0) {
+                const container = document.getElementById('invitados-especificos-container');
+                const list = document.getElementById('invitados-especificos-list');
+                container.classList.remove('hidden');
+                list.innerHTML = '';
+                
+                personasPreLlenadas.forEach((persona, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'persona-card border border-grey-cotton rounded-lg p-4 transition-all';
+                    card.innerHTML = `
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1">
+                                <p class="font-medium text-ebony">${persona.nombreCompleto}</p>
+                                <p class="text-xs text-evergreen opacity-70 mt-1">Invitación personal</p>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" 
+                                       class="persona-checkbox" 
+                                       data-persona-id="${persona.id}" 
+                                       data-type="especifico"
+                                       onchange="updateConfirmCount()"
+                                       ${currentInvitado.confirmado ? 'checked' : ''}>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    `;
+                    list.appendChild(card);
+                });
+            }
+            
+            // 2. Pases adicionales (vacíos para llenar)
+            if (pasesAdicionales > 0) {
+                const container = document.getElementById('pases-adicionales-container');
+                const list = document.getElementById('pases-adicionales-list');
+                container.classList.remove('hidden');
+                list.innerHTML = '';
+                
+                for (let i = 0; i < pasesAdicionales; i++) {
+                    const card = document.createElement('div');
+                    card.className = 'pase-adicional-card border border-grey-cotton rounded-lg p-4';
+                    card.innerHTML = `
+                        <div class="flex items-start gap-3">
+                            <label class="toggle-switch mt-1">
+                                <input type="checkbox" 
+                                       class="pase-adicional-checkbox" 
+                                       data-index="${i}"
+                                       data-type="adicional"
+                                       onchange="togglePaseAdicional(${i})">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <div class="flex-1">
+                                <input type="text" 
+                                       id="adicional-nombre-${i}"
+                                       placeholder="Nombre del acompañante (opcional)"
+                                       disabled
+                                       class="w-full px-3 py-2 border border-grey-cotton rounded-lg text-sm focus:ring-2 focus:ring-seedling focus:border-transparent disabled:bg-grey-cotton disabled:opacity-50">
+                                <p class="text-xs text-evergreen opacity-70 mt-1">Pase adicional ${i + 1}</p>
+                            </div>
+                        </div>
+                    `;
+                    list.appendChild(card);
+                }
+            }
+            
+            // Calcular confirmados iniciales
+            updateConfirmCount();
+        }
+        
+        function togglePaseAdicional(index) {
+            const checkbox = document.querySelector(`[data-index="${index}"][data-type="adicional"]`);
+            const input = document.getElementById(`adicional-nombre-${index}`);
+            
+            if (checkbox.checked) {
+                input.disabled = false;
+                input.focus();
+            } else {
+                input.disabled = true;
+                input.value = '';
+            }
+            
+            updateConfirmCount();
+        }
+        
+        function updateConfirmCount() {
+            const especificosChecked = document.querySelectorAll('.persona-checkbox:checked').length;
+            const adicionalesChecked = document.querySelectorAll('.pase-adicional-checkbox:checked').length;
+            const total = especificosChecked + adicionalesChecked;
+            
+            document.getElementById('count-confirmados').textContent = total;
+        }
+        
         function closeModal() {
             document.getElementById('modal-confirmacion').classList.remove('active');
-            document.getElementById('success-message').classList.add('hidden');
             document.getElementById('error-message').classList.add('hidden');
-        }
-        
-        function incrementPases() {
-            const input = document.getElementById('pases-input');
-            const max = parseInt(input.max);
-            const current = parseInt(input.value);
-            if (current < max) {
-                input.value = current + 1;
-                updateNombresInputs();
-            }
-        }
-        
-        function decrementPases() {
-            const input = document.getElementById('pases-input');
-            const current = parseInt(input.value);
-            if (current > 0) {
-                input.value = current - 1;
-                updateNombresInputs();
-            }
-        }
-        
-        function updateNombresInputs() {
-            const pases = parseInt(document.getElementById('pases-input').value);
-            const container = document.getElementById('nombres-container');
-            const list = document.getElementById('nombres-list');
-            
-            if (pases === 0) {
-                container.classList.add('hidden');
-                return;
-            }
-            
-            container.classList.remove('hidden');
-            list.innerHTML = '';
-            
-            for (let i = 0; i < pases; i++) {
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.placeholder = `Nombre completo invitado ${i + 1}`;
-                input.className = 'w-full px-4 py-2 border border-grey-cotton rounded-lg focus:ring-2 focus:ring-seedling focus:border-transparent text-sm';
-                input.id = `nombre-${i}`;
-                
-                // Cargar nombre existente si hay
-                if (currentInvitado.personas && currentInvitado.personas[i]) {
-                    input.value = currentInvitado.personas[i].nombreCompleto;
-                }
-                
-                list.appendChild(input);
-            }
         }
         
         document.getElementById('confirmation-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const pases = parseInt(document.getElementById('pases-input').value);
             const mensaje = document.getElementById('mensaje').value;
             
-            // Recopilar nombres
-            const nombresInvitados = [];
-            for (let i = 0; i < pases; i++) {
-                const nombreInput = document.getElementById(`nombre-${i}`);
-                if (nombreInput) {
-                    nombresInvitados.push(nombreInput.value.trim());
-                }
-            }
+            // Recopilar confirmaciones de personas específicas
+            const personasEspecificas = [];
+            document.querySelectorAll('.persona-checkbox').forEach(checkbox => {
+                personasEspecificas.push({
+                    personaId: parseInt(checkbox.dataset.personaId),
+                    confirmado: checkbox.checked
+                });
+            });
             
-            if (pases > currentInvitado.pasesTotales) {
-                document.getElementById('error-message').textContent = `No puedes confirmar más de ${currentInvitado.pasesTotales} personas`;
-                document.getElementById('error-message').classList.remove('hidden');
-                return;
-            }
+            // Recopilar pases adicionales confirmados
+            const pasesAdicionales = [];
+            document.querySelectorAll('.pase-adicional-checkbox').forEach(checkbox => {
+                if (checkbox.checked) {
+                    const index = checkbox.dataset.index;
+                    const nombreInput = document.getElementById(`adicional-nombre-${index}`);
+                    const nombre = nombreInput.value.trim();
+                    
+                    if (nombre) {
+                        pasesAdicionales.push(nombre);
+                    }
+                }
+            });
+            
+            // Calcular total de confirmados
+            const especificosConfirmados = personasEspecificas.filter(p => p.confirmado).length;
+            const pasesConfirmados = especificosConfirmados + pasesAdicionales.length;
             
             // Show loading
             document.getElementById('modal-loading').classList.add('active');
@@ -801,9 +933,10 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({
                         slug: currentInvitado.slug,
-                        pasesConfirmados: pases,
+                        pasesConfirmados: pasesConfirmados,
                         mensaje: mensaje,
-                        nombresInvitados: nombresInvitados
+                        personasEspecificas: personasEspecificas,
+                        nombresAdicionales: pasesAdicionales
                     })
                 });
                 
@@ -820,7 +953,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                             </svg>
                             <p class="font-playfair text-3xl text-ebony mb-2">¡Confirmado!</p>
-                            <p class="text-evergreen">${pases} persona${pases > 1 ? 's' : ''} confirmada${pases > 1 ? 's' : ''}</p>
+                            <p class="text-evergreen">${pasesConfirmados} persona${pasesConfirmados !== 1 ? 's' : ''} confirmada${pasesConfirmados !== 1 ? 's' : ''}</p>
                         </div>
                     `;
                     document.getElementById('modal-loading').classList.add('active');
@@ -829,7 +962,7 @@
                         closeModal();
                         // Update UI
                         document.getElementById('already-confirmed').classList.remove('hidden');
-                        document.getElementById('confirmed-details').textContent = `${pases} persona${pases > 1 ? 's' : ''} confirmada${pases > 1 ? 's' : ''}`;
+                        document.getElementById('confirmed-details').textContent = `${pasesConfirmados} persona${pasesConfirmados !== 1 ? 's' : ''} confirmada${pasesConfirmados !== 1 ? 's' : ''}`;
                         document.getElementById('confirm-button').textContent = 'Actualizar Confirmación';
                         // Reset modal
                         document.getElementById('modal-loading').classList.remove('active');

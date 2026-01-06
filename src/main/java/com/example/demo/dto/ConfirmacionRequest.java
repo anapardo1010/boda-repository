@@ -6,7 +6,9 @@ public class ConfirmacionRequest {
     private String slug;
     private int pasesConfirmados;
     private String mensaje;
-    private List<String> nombresInvitados;
+    private List<String> nombresInvitados; // Mantener por compatibilidad
+    private List<PersonaConfirmacion> personasEspecificas; // Nueva estructura
+    private List<String> nombresAdicionales; // Nuevos pases adicionales
     
     public ConfirmacionRequest() {}
     
@@ -47,5 +49,50 @@ public class ConfirmacionRequest {
     
     public void setNombresInvitados(List<String> nombresInvitados) {
         this.nombresInvitados = nombresInvitados;
+    }
+    
+    public List<PersonaConfirmacion> getPersonasEspecificas() {
+        return personasEspecificas;
+    }
+    
+    public void setPersonasEspecificas(List<PersonaConfirmacion> personasEspecificas) {
+        this.personasEspecificas = personasEspecificas;
+    }
+    
+    public List<String> getNombresAdicionales() {
+        return nombresAdicionales;
+    }
+    
+    public void setNombresAdicionales(List<String> nombresAdicionales) {
+        this.nombresAdicionales = nombresAdicionales;
+    }
+    
+    // Inner class para las confirmaciones de personas específicas
+    public static class PersonaConfirmacion {
+        private Long personaId;
+        private boolean confirmado;
+        
+        public PersonaConfirmacion() {}
+        
+        public PersonaConfirmacion(Long personaId, boolean confirmado) {
+            this.personaId = personaId;
+            this.confirmado = confirmado;
+        }
+        
+        public Long getPersonaId() {
+            return personaId;
+        }
+        
+        public void setPersonaId(Long personaId) {
+            this.personaId = personaId;
+        }
+        
+        public boolean isConfirmado() {
+            return confirmado;
+        }
+        
+        public void setConfirmado(boolean confirmado) {
+            this.confirmado = confirmado;
+        }
     }
 }

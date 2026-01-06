@@ -181,7 +181,7 @@
     </button>
 
     <div id="modal-form" class="modal">
-        <div class="bg-white rounded-2xl max-w-md w-full mx-4 p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div class="bg-white rounded-2xl max-w-2xl w-full mx-4 p-6 shadow-2xl max-h-[90vh] overflow-y-auto">
             <h3 id="modal-title" class="font-playfair text-3xl text-ebony mb-6 text-center">Agregar Invitado</h3>
             <form id="invitado-form" class="space-y-4">
                 <input type="hidden" id="invitado-id">
@@ -208,8 +208,27 @@
                     <label class="block text-sm font-medium text-evergreen mb-2">Número de Pases</label>
                     <input type="number" id="pasesTotales" required min="1" 
                            class="w-full px-4 py-3 border border-grey-cotton rounded-lg focus:ring-2 focus:ring-seedling focus:border-transparent"
-                           placeholder="4">
+                           placeholder="4"
+                           onchange="updatePersonasFields()">
                 </div>
+                
+                <!-- Gestión de nombres de invitados específicos -->
+                <div id="personas-section" class="hidden">
+                    <div class="border-t border-grey-cotton pt-4 mt-4">
+                        <label class="block text-sm font-medium text-evergreen mb-2 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-seedling" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                            Nombres de Invitados Específicos
+                            <span class="text-xs opacity-70">(opcional)</span>
+                        </label>
+                        <p class="text-xs text-evergreen opacity-60 mb-3">
+                            Agrega los nombres de las personas que SÍ quieres que asistan. Los pases sin nombre quedarán disponibles para que el invitado los complete.
+                        </p>
+                        <div id="personas-list" class="space-y-2"></div>
+                    </div>
+                </div>
+                
                 <div class="flex gap-3 pt-4">
                     <button type="submit" class="flex-1 bg-seedling text-white px-6 py-3 rounded-full font-medium hover:bg-evergreen transition-all">
                         Guardar
@@ -435,6 +454,7 @@
             document.getElementById('modal-title').textContent='Agregar Invitado';
             document.getElementById('invitado-form').reset();
             document.getElementById('invitado-id').value='';
+            document.getElementById('personas-section').classList.add('hidden');
             document.getElementById('modal-form').classList.add('active');
         }
 
@@ -447,7 +467,53 @@
             document.getElementById('slug').value=inv.slug;
             document.getElementById('telefono').value=inv.telefono||'';
             document.getElementById('pasesTotales').value=inv.pasesTotales;
+            
+            // Cargar personas existentes
+            updatePersonasFields(inv.personas || []);
+            
             document.getElementById('modal-form').classList.add('active');
+        }
+        
+        function updatePersonasFields(existingPersonas = []){
+            const pasesTotales = parseInt(document.getElementById('pasesTotales').value) || 0;
+            
+            if (pasesTotales === 0) {
+                document.getElementById('personas-section').classList.add('hidden');
+                return;
+            }
+            
+            document.getElementById('personas-section').classList.remove('hidden');
+            const list = document.getElementById('personas-list');
+            list.innerHTML = '';
+            
+            for (let i = 0; i < pasesTotales; i++) {
+                const persona = existingPersonas[i];
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-2';
+                div.innerHTML = `
+                    <input type="hidden" class="persona-id" value="${persona ? persona.id : ''}">
+                    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-grey-cotton flex items-center justify-center text-xs font-medium text-evergreen">
+                        ${i + 1}
+                    </span>
+                    <input type="text" 
+                           class="persona-nombre flex-1 px-3 py-2 border border-grey-cotton rounded-lg text-sm focus:ring-2 focus:ring-seedling focus:border-transparent" 
+                           placeholder="Nombre completo (opcional)"
+                           value="${persona ? persona.nombreCompleto : ''}">
+                    <button type="button" 
+                            onclick="clearPersonaField(${i})"
+                            class="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-500 hover:text-white transition-all text-xs flex-shrink-0">
+                        ✕
+                    </button>
+                `;
+                list.appendChild(div);
+            }
+        }
+        
+        function clearPersonaField(index){
+            const inputs = document.querySelectorAll('.persona-nombre');
+            if (inputs[index]) {
+                inputs[index].value = '';
+            }
         }
 
         function closeModal(){
@@ -466,6 +532,25 @@
                 confirmado:false,
                 mensaje:''
             };
+            
+            // Recopilar nombres de personas
+            const personasNombres = [];
+            const personasIds = [];
+            document.querySelectorAll('.persona-nombre').forEach((input, index) => {
+                const nombre = input.value.trim();
+                const personaId = document.querySelectorAll('.persona-id')[index].value;
+                
+                if (nombre) {
+                    personasNombres.push({
+                        id: personaId ? parseInt(personaId) : null,
+                        nombreCompleto: nombre,
+                        orden: index + 1
+                    });
+                }
+            });
+            
+            invitado.personas = personasNombres;
+            
             try{
                 let response;
                 if(id){
