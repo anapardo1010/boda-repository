@@ -721,10 +721,6 @@
                 currentInvitado = await response.json();
                 displayInvitado();
                 
-                // Start countdown
-                updateCountdown();
-                countdownInterval = setInterval(updateCountdown, 1000);
-                
                 // Sticky button
                 window.addEventListener('scroll', () => {
                     const stickyBtn = document.getElementById('sticky-confirm-btn');
@@ -986,7 +982,12 @@
             }
         });
         
-        document.addEventListener('DOMContentLoaded', loadInvitado);
+        // Iniciar countdown siempre
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCountdown();
+            countdownInterval = setInterval(updateCountdown, 1000);
+            loadInvitado();
+        });
     </script>
 </body>
 </html>
