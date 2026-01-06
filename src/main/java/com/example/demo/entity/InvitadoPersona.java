@@ -1,5 +1,6 @@
 package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 @Entity
@@ -12,6 +13,7 @@ public class InvitadoPersona {
     
     @ManyToOne
     @JoinColumn(name = "invitado_id", nullable = false)
+    @JsonIgnore  // Evita la serialización del invitado para prevenir referencia circular
     private Invitado invitado;
     
     @Column(nullable = false)
