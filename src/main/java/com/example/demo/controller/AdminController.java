@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -116,21 +115,17 @@ public class AdminController {
             existingInv.setTelefono(invitado.getTelefono());
             existingInv.setPasesTotales(invitado.getPasesTotales());
             
-            // Manejar personas: remover solo las pre-llenadas (no adicionales)
-            List<InvitadoPersona> personasActuales = new ArrayList<>(existingInv.getPersonas());
-            List<InvitadoPersona> personasAEliminar = personasActuales.stream()
-                .filter(p -> !p.getEsAdicional())
-                .collect(Collectors.toList());
+            // SIMPLIFICADO: Solo eliminar personas ESPECÍFICAS (esAdicional=false)
+            // Las adicionales las maneja el invitado desde su panel
+            existingInv.getPersonas().removeIf(p -> !p.getEsAdicional());
             
-            existingInv.getPersonas().removeAll(personasAEliminar);
-            
-            // Agregar nuevas personas del admin
+            // Agregar nuevas personas específicas del admin
             if (invitado.getPersonas() != null) {
                 for (InvitadoPersona nuevaPersona : invitado.getPersonas()) {
                     if (nuevaPersona.getNombreCompleto() != null && !nuevaPersona.getNombreCompleto().trim().isEmpty()) {
                         nuevaPersona.setInvitado(existingInv);
-                        nuevaPersona.setEsAdicional(false);
-                        nuevaPersona.setConfirmado(false);
+                        nuevaPersona.setEsAdicional(false);  // Marcado como específico del admin
+                        nuevaPersona.setConfirmado(false);    // Pendiente de confirmación
                         existingInv.getPersonas().add(nuevaPersona);
                     }
                 }
@@ -178,7 +173,9 @@ public class AdminController {
         
         for (Invitado inv : invitados) {
             if (inv.isConfirmado()) {
+                // Solo mostrar personas con confirmado = true
                 String nombresPersonas = inv.getPersonas().stream()
+                    .filter(p -> p.getConfirmado())  // SOLO CONFIRMADOS
                     .map(InvitadoPersona::getNombreCompleto)
                     .collect(Collectors.joining("; "));
                 

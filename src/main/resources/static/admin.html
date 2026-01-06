@@ -312,8 +312,13 @@
             }
             
             summaryList.innerHTML=filteredInvitados.map(inv=>{
-                const nombres = inv.personas && inv.personas.length > 0 
-                    ? inv.personas.map(p => p.nombreCompleto).join(', ')
+                // Solo mostrar personas CONFIRMADAS
+                const personasConfirmadas = inv.personas && inv.personas.length > 0 
+                    ? inv.personas.filter(p => p.confirmado)
+                    : [];
+                    
+                const nombres = personasConfirmadas.length > 0
+                    ? personasConfirmadas.map(p => p.nombreCompleto).join(', ')
                     : 'Nombres no especificados';
                     
                 return `
@@ -329,9 +334,9 @@
                             </span>
                         </div>
                     </div>
-                    ${inv.confirmado && inv.personas && inv.personas.length > 0 ? `
+                    ${inv.confirmado && personasConfirmadas.length > 0 ? `
                         <div class="pl-4 border-l-2 border-seedling mt-2">
-                            <p class="text-xs text-evergreen opacity-70 mb-1">Invitados:</p>
+                            <p class="text-xs text-evergreen opacity-70 mb-1">Invitados confirmados:</p>
                             <p class="text-sm text-evergreen">${nombres}</p>
                         </div>
                     ` : ''}
@@ -468,8 +473,9 @@
             document.getElementById('telefono').value=inv.telefono||'';
             document.getElementById('pasesTotales').value=inv.pasesTotales;
             
-            // Cargar personas existentes
-            updatePersonasFields(inv.personas || []);
+            // Cargar SOLO personas específicas (esAdicional = false)
+            const personasEspecificas = inv.personas ? inv.personas.filter(p => !p.esAdicional) : [];
+            updatePersonasFields(personasEspecificas);
             
             document.getElementById('modal-form').classList.add('active');
         }

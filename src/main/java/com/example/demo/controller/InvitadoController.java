@@ -56,9 +56,8 @@ public class InvitadoController {
             invitado.setConfirmado(request.getPasesConfirmados() > 0);
             invitado.setMensaje(request.getMensaje() != null ? request.getMensaje() : "");
             
-            // NUEVA LÓGICA: Manejar confirmaciones de personas específicas y adicionales
+            // PERSONAS ESPECÍFICAS (esAdicional = false): Solo actualizar confirmado, NUNCA eliminar
             if (request.getPersonasEspecificas() != null) {
-                // Actualizar estado de confirmación de personas pre-llenadas
                 for (ConfirmacionRequest.PersonaConfirmacion pc : request.getPersonasEspecificas()) {
                     invitado.getPersonas().stream()
                         .filter(p -> p.getId() != null && p.getId().equals(pc.getPersonaId()))
@@ -67,12 +66,12 @@ public class InvitadoController {
                 }
             }
             
-            // Manejar nombres adicionales (pases extra)
-            if (request.getNombresAdicionales() != null && !request.getNombresAdicionales().isEmpty()) {
-                // Remover personas adicionales anteriores de la colección
+            // PERSONAS ADICIONALES (esAdicional = true): Eliminar y reemplazar completamente
+            if (request.getNombresAdicionales() != null) {
+                // Remover TODAS las personas adicionales anteriores
                 invitado.getPersonas().removeIf(p -> p.getEsAdicional());
                 
-                // Agregar nuevas personas adicionales
+                // Agregar SOLO las nuevas personas adicionales con nombre
                 int maxOrden = invitado.getPersonas().stream()
                     .mapToInt(InvitadoPersona::getOrden)
                     .max()
@@ -83,25 +82,7 @@ public class InvitadoController {
                     if (nombre != null && !nombre.trim().isEmpty()) {
                         InvitadoPersona persona = new InvitadoPersona(invitado, nombre.trim(), maxOrden + i + 1);
                         persona.setEsAdicional(true);
-                        persona.setConfirmado(true);
-                        invitado.getPersonas().add(persona);
-                    }
-                }
-            }
-            
-            // COMPATIBILIDAD: Si llega con la estructura antigua (nombresInvitados), manejarla
-            if (request.getNombresInvitados() != null && !request.getNombresInvitados().isEmpty() 
-                && request.getPersonasEspecificas() == null) {
-                // Limpiar todas las personas anteriores
-                invitado.getPersonas().clear();
-                
-                // Agregar nuevos nombres
-                for (int i = 0; i < request.getNombresInvitados().size(); i++) {
-                    String nombre = request.getNombresInvitados().get(i);
-                    if (nombre != null && !nombre.trim().isEmpty()) {
-                        InvitadoPersona persona = new InvitadoPersona(invitado, nombre.trim(), i + 1);
-                        persona.setConfirmado(true);
-                        persona.setEsAdicional(true);
+                        persona.setConfirmado(true);  // Adicionales siempre confirmados
                         invitado.getPersonas().add(persona);
                     }
                 }

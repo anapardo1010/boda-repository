@@ -738,6 +738,7 @@
         
         function displayInvitado() {
             document.getElementById('loading').classList.add('hidden');
+            document.getElementById('error-content').classList.add('hidden');
             document.getElementById('main-content').classList.remove('hidden');
             
             const esSingular = currentInvitado.pasesTotales === 1;
