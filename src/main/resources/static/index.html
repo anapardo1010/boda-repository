@@ -536,6 +536,13 @@
                         </div>
                         <p id="pases-max" class="text-xs text-center text-evergreen opacity-70 mt-2"></p>
                     </div>
+                    
+                    <!-- Nombres de invitados -->
+                    <div id="nombres-container" class="hidden">
+                        <label class="block text-sm font-medium text-evergreen mb-2">Nombres de los invitados</label>
+                        <div id="nombres-list" class="space-y-2"></div>
+                    </div>
+                    
                     <div>
                         <label for="mensaje" class="block text-sm font-medium text-evergreen mb-2">Mensaje especial (opcional)</label>
                         <textarea id="mensaje" name="mensaje" rows="3" placeholder="Escribe un mensaje para los novios..."
@@ -665,6 +672,17 @@
         }
         
         function showModal() {
+            // Cargar mensaje existente si ya confirmó
+            if (currentInvitado.confirmado && currentInvitado.mensaje) {
+                document.getElementById('mensaje').value = currentInvitado.mensaje;
+            }
+            
+            // Cargar pases confirmados si ya confirmó
+            if (currentInvitado.confirmado) {
+                document.getElementById('pases-input').value = currentInvitado.pasesConfirmados;
+                updateNombresInputs();
+            }
+            
             document.getElementById('modal-confirmacion').classList.add('active');
         }
         
@@ -680,6 +698,7 @@
             const current = parseInt(input.value);
             if (current < max) {
                 input.value = current + 1;
+                updateNombresInputs();
             }
         }
         
@@ -688,6 +707,36 @@
             const current = parseInt(input.value);
             if (current > 0) {
                 input.value = current - 1;
+                updateNombresInputs();
+            }
+        }
+        
+        function updateNombresInputs() {
+            const pases = parseInt(document.getElementById('pases-input').value);
+            const container = document.getElementById('nombres-container');
+            const list = document.getElementById('nombres-list');
+            
+            if (pases === 0) {
+                container.classList.add('hidden');
+                return;
+            }
+            
+            container.classList.remove('hidden');
+            list.innerHTML = '';
+            
+            for (let i = 0; i < pases; i++) {
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.placeholder = `Nombre completo invitado ${i + 1}`;
+                input.className = 'w-full px-4 py-2 border border-grey-cotton rounded-lg focus:ring-2 focus:ring-seedling focus:border-transparent text-sm';
+                input.id = `nombre-${i}`;
+                
+                // Cargar nombre existente si hay
+                if (currentInvitado.personas && currentInvitado.personas[i]) {
+                    input.value = currentInvitado.personas[i].nombreCompleto;
+                }
+                
+                list.appendChild(input);
             }
         }
         
@@ -696,6 +745,15 @@
             
             const pases = parseInt(document.getElementById('pases-input').value);
             const mensaje = document.getElementById('mensaje').value;
+            
+            // Recopilar nombres
+            const nombresInvitados = [];
+            for (let i = 0; i < pases; i++) {
+                const nombreInput = document.getElementById(`nombre-${i}`);
+                if (nombreInput) {
+                    nombresInvitados.push(nombreInput.value.trim());
+                }
+            }
             
             if (pases > currentInvitado.pasesTotales) {
                 document.getElementById('error-message').textContent = `No puedes confirmar más de ${currentInvitado.pasesTotales} personas`;
@@ -715,7 +773,8 @@
                     body: JSON.stringify({
                         slug: currentInvitado.slug,
                         pasesConfirmados: pases,
-                        mensaje: mensaje
+                        mensaje: mensaje,
+                        nombresInvitados: nombresInvitados
                     })
                 });
                 

@@ -1,16 +1,20 @@
 package com.example.demo.controller;
 
 import com.example.demo.entity.Invitado;
+import com.example.demo.entity.InvitadoPersona;
 import com.example.demo.repository.InvitadoRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -117,5 +121,40 @@ public class AdminController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(Map.of("error", "Error al eliminar: " + e.getMessage()));
         }
+    }
+    
+    /**
+     * Exporta la lista de invitados en formato CSV
+     * GET /api/admin/export-lista
+     */
+    @GetMapping("/export-lista")
+    public ResponseEntity<String> exportarLista() {
+        List<Invitado> invitados = invitadoRepository.findAll();
+        
+        StringBuilder csv = new StringBuilder();
+        csv.append("Familia,Pases Totales,Pases Confirmados,Nombres de Invitados\n");
+        
+        for (Invitado inv : invitados) {
+            if (inv.isConfirmado()) {
+                String nombresPersonas = inv.getPersonas().stream()
+                    .map(InvitadoPersona::getNombreCompleto)
+                    .collect(Collectors.joining("; "));
+                
+                csv.append(String.format("\"%s\",%d,%d,\"%s\"\n",
+                    inv.getNombreFamilia(),
+                    inv.getPasesTotales(),
+                    inv.getPasesConfirmados(),
+                    nombresPersonas.isEmpty() ? "No especificado" : nombresPersonas
+                ));
+            }
+        }
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.parseMediaType("text/csv"));
+        headers.setContentDispositionFormData("attachment", "lista-invitados-boda.csv");
+        
+        return ResponseEntity.ok()
+            .headers(headers)
+            .body(csv.toString());
     }
 }

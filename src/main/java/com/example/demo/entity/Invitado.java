@@ -1,6 +1,8 @@
 package com.example.demo.entity;
 
 import jakarta.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "invitados", uniqueConstraints = @UniqueConstraint(columnNames = "slug"))
@@ -30,6 +32,10 @@ public class Invitado {
     
     @Column(length = 20)
     private String telefono = "";
+    
+    @OneToMany(mappedBy = "invitado", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("orden ASC")
+    private List<InvitadoPersona> personas = new ArrayList<>();
     
     // Constructores
     public Invitado() {}
@@ -110,5 +116,13 @@ public class Invitado {
     
     public void setTelefono(String telefono) {
         this.telefono = telefono;
+    }
+    
+    public List<InvitadoPersona> getPersonas() {
+        return personas;
+    }
+    
+    public void setPersonas(List<InvitadoPersona> personas) {
+        this.personas = personas;
     }
 }
