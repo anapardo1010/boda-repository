@@ -783,14 +783,21 @@
         }
         
         function buildModalContent() {
-            const personasPreLlenadas = currentInvitado.personas || [];
+            // FILTRAR: Solo personas ACTIVAS
+            const personasActivas = currentInvitado.personas ? 
+                currentInvitado.personas.filter(p => p.activo !== false) : [];
+            
+            // Separar principales y adicionales (ACTIVOS)
+            const personasPreLlenadas = personasActivas.filter(p => !p.esAdicional);
+            const personasAdicionalesExistentes = personasActivas.filter(p => p.esAdicional);
+            
             const pasesTotales = currentInvitado.pasesTotales;
             const pasesAdicionales = pasesTotales - personasPreLlenadas.length;
             
             // Actualizar contador total
             document.getElementById('count-total').textContent = pasesTotales;
             
-            // 1. Invitados específicos (pre-llenados)
+            // 1. Invitados específicos (pre-llenados) - SOLO ACTIVOS
             if (personasPreLlenadas.length > 0) {
                 const container = document.getElementById('invitados-especificos-container');
                 const list = document.getElementById('invitados-especificos-list');
@@ -822,7 +829,6 @@
             }
             
             // 2. Pases adicionales (existentes y disponibles)
-            const personasAdicionales = currentInvitado.personas.filter(p => p.esAdicional) || [];
             if (pasesAdicionales > 0) {
                 const container = document.getElementById('pases-adicionales-container');
                 const list = document.getElementById('pases-adicionales-list');
@@ -830,7 +836,8 @@
                 list.innerHTML = '';
                 
                 for (let i = 0; i < pasesAdicionales; i++) {
-                    const personaExistente = personasAdicionales[i];
+                    // Cargar persona adicional ACTIVA existente si existe
+                    const personaExistente = personasAdicionalesExistentes[i];
                     const card = document.createElement('div');
                     card.className = 'pase-adicional-card border border-grey-cotton rounded-lg p-4';
                     card.innerHTML = `

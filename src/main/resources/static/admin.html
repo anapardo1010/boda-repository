@@ -312,9 +312,9 @@
             }
             
             summaryList.innerHTML=filteredInvitados.map(inv=>{
-                // Solo mostrar personas CONFIRMADAS
+                // Solo mostrar personas ACTIVAS y CONFIRMADAS
                 const personasConfirmadas = inv.personas && inv.personas.length > 0 
-                    ? inv.personas.filter(p => p.confirmado)
+                    ? inv.personas.filter(p => p.activo !== false && p.confirmado)
                     : [];
                     
                 const nombres = personasConfirmadas.length > 0
@@ -473,8 +473,10 @@
             document.getElementById('telefono').value=inv.telefono||'';
             document.getElementById('pasesTotales').value=inv.pasesTotales;
             
-            // Cargar SOLO personas específicas (esAdicional = false)
-            const personasEspecificas = inv.personas ? inv.personas.filter(p => !p.esAdicional) : [];
+            // Cargar SOLO personas específicas ACTIVAS (esAdicional = false, activo = true)
+            const personasEspecificas = inv.personas 
+                ? inv.personas.filter(p => !p.esAdicional && p.activo !== false) 
+                : [];
             updatePersonasFields(personasEspecificas);
             
             document.getElementById('modal-form').classList.add('active');

@@ -28,6 +28,9 @@ public class InvitadoPersona {
     @Column(nullable = false, columnDefinition = "boolean default false")
     private Boolean esAdicional = false;  // True si fue agregado por el invitado, false si fue pre-llenado
     
+    @Column(nullable = false, columnDefinition = "boolean default true")
+    private Boolean activo = true;  // Soft delete - false para ocultar sin eliminar de DB
+    
     // Constructors
     public InvitadoPersona() {}
     
@@ -37,6 +40,7 @@ public class InvitadoPersona {
         this.orden = orden;
         this.confirmado = false;
         this.esAdicional = false;
+        this.activo = true;
     }
     
     // Getters and Setters
@@ -86,5 +90,13 @@ public class InvitadoPersona {
     
     public void setEsAdicional(Boolean esAdicional) {
         this.esAdicional = esAdicional;
+    }
+    
+    public Boolean getActivo() {
+        return activo;
+    }
+    
+    public void setActivo(Boolean activo) {
+        this.activo = activo;
     }
 }

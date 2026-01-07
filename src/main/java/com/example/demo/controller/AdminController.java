@@ -80,6 +80,7 @@ public class AdminController {
                     persona.setInvitado(invitado);
                     persona.setEsAdicional(false);
                     persona.setConfirmado(false);
+                    persona.setActivo(true);  // Activo por defecto
                 }
             }
             
@@ -95,6 +96,12 @@ public class AdminController {
     /**
      * Actualiza un invitado existente
      * PUT /api/admin/invitados/{id}
+     * 
+     * LÓGICA REFACTORIZADA:
+     * - Actualización incremental (PATCH) sin DELETE
+     * - Preserva datos de confirmación del usuario
+     * - Usa soft-delete con campo 'activo'
+     * - Separa invitados principales de pases adicionales
      */
     @PutMapping("/invitados/{id}")
     @Transactional
@@ -109,27 +116,58 @@ public class AdminController {
         try {
             Invitado existingInv = existing.get();
             
-            // Actualizar datos básicos
+            // 1. Actualizar datos básicos
             existingInv.setNombreFamilia(invitado.getNombreFamilia());
             existingInv.setSlug(invitado.getSlug());
             existingInv.setTelefono(invitado.getTelefono());
             existingInv.setPasesTotales(invitado.getPasesTotales());
             
-            // SIMPLIFICADO: Solo eliminar personas ESPECÍFICAS (esAdicional=false)
-            // Las adicionales las maneja el invitado desde su panel
-            existingInv.getPersonas().removeIf(p -> !p.getEsAdicional());
+            // 2. GESTIÓN DE INVITADOS PRINCIPALES (esAdicional=false)
+            // Solo el admin gestiona estos - NUNCA tocar los adicionales del usuario
             
-            // Agregar nuevas personas específicas del admin
+            // 2.1. Obtener invitados principales actuales (activos)
+            List<InvitadoPersona> principalesActuales = existingInv.getPersonas().stream()
+                .filter(p -> !p.getEsAdicional() && p.getActivo())
+                .toList();
+            
+            // 2.2. Crear mapa de invitados principales nuevos
+            Map<String, InvitadoPersona> nuevosMap = new HashMap<>();
             if (invitado.getPersonas() != null) {
-                for (InvitadoPersona nuevaPersona : invitado.getPersonas()) {
-                    if (nuevaPersona.getNombreCompleto() != null && !nuevaPersona.getNombreCompleto().trim().isEmpty()) {
-                        nuevaPersona.setInvitado(existingInv);
-                        nuevaPersona.setEsAdicional(false);  // Marcado como específico del admin
-                        nuevaPersona.setConfirmado(false);    // Pendiente de confirmación
-                        existingInv.getPersonas().add(nuevaPersona);
+                for (InvitadoPersona nueva : invitado.getPersonas()) {
+                    if (nueva.getNombreCompleto() != null && !nueva.getNombreCompleto().trim().isEmpty()) {
+                        nuevosMap.put(nueva.getNombreCompleto().trim().toLowerCase(), nueva);
                     }
                 }
             }
+            
+            // 2.3. Soft-delete: Marcar como inactivos los que ya no están en la lista
+            for (InvitadoPersona actual : principalesActuales) {
+                String nombreKey = actual.getNombreCompleto().trim().toLowerCase();
+                if (!nuevosMap.containsKey(nombreKey)) {
+                    // Ya no está en la lista nueva - SOFT DELETE
+                    actual.setActivo(false);
+                } else {
+                    // Actualizar nombre si cambió (ej. corrección tipográfica)
+                    InvitadoPersona nueva = nuevosMap.get(nombreKey);
+                    actual.setNombreCompleto(nueva.getNombreCompleto());
+                    actual.setOrden(nueva.getOrden());
+                    // Eliminar del map para no crear duplicado
+                    nuevosMap.remove(nombreKey);
+                }
+            }
+            
+            // 2.4. Agregar nuevos invitados principales que no existían
+            for (InvitadoPersona nueva : nuevosMap.values()) {
+                nueva.setInvitado(existingInv);
+                nueva.setEsAdicional(false);
+                nueva.setConfirmado(false);
+                nueva.setActivo(true);
+                existingInv.getPersonas().add(nueva);
+            }
+            
+            // 3. PASES ADICIONALES: Completamente separados, el admin NO los toca
+            // Solo ajustar disponibilidad basándose en pasesTotales
+            // Los usuarios gestionan sus propios adicionales desde el frontend
             
             Invitado updated = invitadoRepository.save(existingInv);
             return ResponseEntity.ok(updated);
@@ -163,6 +201,7 @@ public class AdminController {
     /**
      * Exporta la lista de invitados en formato CSV
      * GET /api/admin/export-lista
+     * FILTRADO: Solo personas ACTIVAS y CONFIRMADAS
      */
     @GetMapping("/export-lista")
     public ResponseEntity<String> exportarLista() {
@@ -173,9 +212,9 @@ public class AdminController {
         
         for (Invitado inv : invitados) {
             if (inv.isConfirmado()) {
-                // Solo mostrar personas con confirmado = true
+                // Solo mostrar personas ACTIVAS y con confirmado = true
                 String nombresPersonas = inv.getPersonas().stream()
-                    .filter(p -> p.getConfirmado())  // SOLO CONFIRMADOS
+                    .filter(p -> p.getActivo() && p.getConfirmado())  // ACTIVAS Y CONFIRMADAS
                     .map(InvitadoPersona::getNombreCompleto)
                     .collect(Collectors.joining("; "));
                 
