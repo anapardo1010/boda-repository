@@ -199,6 +199,34 @@ public class AdminController {
     }
     
     /**
+     * Cambia el estado de bloqueo de confirmación de una invitación
+     * PUT /api/admin/invitados/{id}/toggle-bloqueo
+     */
+    @PutMapping("/invitados/{id}/toggle-bloqueo")
+    @Transactional
+    public ResponseEntity<?> toggleBloqueo(@PathVariable Long id, @RequestBody Map<String, Boolean> request) {
+        Optional<Invitado> existing = invitadoRepository.findById(id);
+        
+        if (existing.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(Map.of("error", "Invitado no encontrado"));
+        }
+        
+        try {
+            Invitado invitado = existing.get();
+            Boolean bloqueado = request.get("confirmacionBloqueada");
+            if (bloqueado != null) {
+                invitado.setConfirmacionBloqueada(bloqueado);
+            }
+            Invitado updated = invitadoRepository.save(invitado);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Error al cambiar bloqueo: " + e.getMessage()));
+        }
+    }
+    
+    /**
      * Exporta la lista de invitados en formato CSV
      * GET /api/admin/export-lista
      * FILTRADO: Solo personas ACTIVAS y CONFIRMADAS

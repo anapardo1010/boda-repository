@@ -54,6 +54,12 @@ public class InvitadoController {
         if (invitadoOpt.isPresent()) {
             Invitado invitado = invitadoOpt.get();
             
+            // Verificar si la confirmación está bloqueada
+            if (invitado.isConfirmacionBloqueada()) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(null);
+            }
+            
             // Actualizar mensaje
             invitado.setMensaje(request.getMensaje() != null ? request.getMensaje() : "");
             

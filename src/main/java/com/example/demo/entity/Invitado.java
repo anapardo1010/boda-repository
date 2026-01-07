@@ -27,6 +27,9 @@ public class Invitado {
     @Column(nullable = false)
     private boolean confirmado = false;
     
+    @Column(nullable = false)
+    private boolean confirmacionBloqueada = false;
+    
     @Column(length = 500)
     private String mensaje = "";
     
@@ -100,6 +103,14 @@ public class Invitado {
     
     public void setConfirmado(boolean confirmado) {
         this.confirmado = confirmado;
+    }
+    
+    public boolean isConfirmacionBloqueada() {
+        return confirmacionBloqueada;
+    }
+    
+    public void setConfirmacionBloqueada(boolean confirmacionBloqueada) {
+        this.confirmacionBloqueada = confirmacionBloqueada;
     }
     
     public String getMensaje() {

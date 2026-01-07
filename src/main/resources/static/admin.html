@@ -393,6 +393,10 @@
                             `:''}
                             <button onclick="copyLink('${inv.slug}')" 
                                 class="w-10 h-10 rounded-full bg-seedling text-white flex items-center justify-center hover:bg-evergreen transition-all" title="Copiar link">🔗</button>
+                            <button onclick="toggleBloqueo(${inv.id},${inv.confirmacionBloqueada})" 
+                                class="w-10 h-10 rounded-full ${inv.confirmacionBloqueada?'bg-yellow-500 hover:bg-yellow-600':'bg-grey-cotton hover:bg-evergreen'} text-white flex items-center justify-center transition-all" title="${inv.confirmacionBloqueada?'Desbloquear':'Bloquear'} confirmación">
+                                ${inv.confirmacionBloqueada?'🔒':'🔓'}
+                            </button>
                             <button onclick="editInvitado(${inv.id})" 
                                 class="w-10 h-10 rounded-full bg-grey-cotton text-evergreen flex items-center justify-center hover:bg-evergreen hover:text-white transition-all" title="Editar">✏️</button>
                             <button onclick="deleteInvitado(${inv.id},'${inv.nombreFamilia}')" 
@@ -711,6 +715,26 @@
             }catch(error){
                 console.error('Error:',error);
                 alert('Error al eliminar invitado');
+            }
+        }
+        
+        async function toggleBloqueo(id, estadoActual){
+            const nuevoEstado = !estadoActual;
+            try{
+                const response = await fetch(`${API_BASE}/invitados/${id}/toggle-bloqueo`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({confirmacionBloqueada: nuevoEstado})
+                });
+                if(response.ok){
+                    alert(nuevoEstado ? 'Confirmación bloqueada' : 'Confirmación desbloqueada');
+                    loadData();
+                }else{
+                    alert('Error al cambiar estado');
+                }
+            }catch(error){
+                console.error('Error:', error);
+                alert('Error al cambiar bloqueo');
             }
         }
         

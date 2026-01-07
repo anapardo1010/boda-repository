@@ -762,6 +762,25 @@
                 document.getElementById('confirm-button').textContent = 'Actualizar Confirmación';
                 document.getElementById('mensaje').value = currentInvitado.mensaje || '';
             }
+            
+            // Si la confirmación está bloqueada
+            if (currentInvitado.confirmacionBloqueada) {
+                document.getElementById('confirm-button').style.display = 'none';
+                // Mostrar lista de confirmados
+                if (currentInvitado.confirmado && currentInvitado.personas && currentInvitado.personas.length > 0) {
+                    const personasConfirmadas = currentInvitado.personas.filter(p => p.activo !== false && p.confirmado);
+                    if (personasConfirmadas.length > 0) {
+                        const listHtml = personasConfirmadas.map(p => `<li class="text-sm text-evergreen">✓ ${p.nombreCompleto}</li>`).join('');
+                        const section = document.createElement('div');
+                        section.className = 'bg-grey-cotton rounded-xl p-6 text-center mb-8';
+                        section.innerHTML = `
+                            <p class="font-playfair text-3xl text-ebony mb-4">¡Gracias por confirmar!</p>
+                            <ul class="inline-block text-left">${listHtml}</ul>
+                        `;
+                        document.getElementById('pases-section').insertAdjacentElement('afterend', section);
+                    }
+                }
+            }
         }
         
         function showError() {
@@ -905,6 +924,13 @@
         
         document.getElementById('confirmation-form').addEventListener('submit', async (e) => {
             e.preventDefault();
+            
+            // Verificar si está bloqueada
+            if (currentInvitado.confirmacionBloqueada) {
+                document.getElementById('error-message').textContent = 'Las confirmaciones han sido bloqueadas por el administrador.';
+                document.getElementById('error-message').classList.remove('hidden');
+                return;
+            }
             
             const mensaje = document.getElementById('mensaje').value;
             
