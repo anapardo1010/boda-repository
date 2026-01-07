@@ -229,6 +229,23 @@
                     </div>
                 </div>
                 
+                <!-- Sección de personas adicionales (agregadas por invitados) -->
+                <div id="personas-adicionales-section" class="hidden">
+                    <div class="border-t border-grey-cotton pt-4 mt-4">
+                        <label class="block text-sm font-medium text-evergreen mb-2 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-seedling" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            Pases Adicionales Agregados
+                            <span class="text-xs bg-seedling text-white px-2 py-0.5 rounded-full">(Agregados por invitados)</span>
+                        </label>
+                        <p class="text-xs text-evergreen opacity-60 mb-3">
+                            Estos pases fueron agregados por los invitados. Solo puedes verlos, no modificarlos.
+                        </p>
+                        <div id="personas-adicionales-list" class="space-y-2 bg-grey-cotton rounded-lg p-3"></div>
+                    </div>
+                </div>
+                
                 <div class="flex gap-3 pt-4">
                     <button type="submit" class="flex-1 bg-seedling text-white px-6 py-3 rounded-full font-medium hover:bg-evergreen transition-all">
                         Guardar
@@ -473,13 +490,48 @@
             document.getElementById('telefono').value=inv.telefono||'';
             document.getElementById('pasesTotales').value=inv.pasesTotales;
             
-            // Cargar SOLO personas específicas ACTIVAS (esAdicional = false, activo = true)
+            // Cargar personas específicas ACTIVAS (esAdicional = false, activo = true)
             const personasEspecificas = inv.personas 
                 ? inv.personas.filter(p => !p.esAdicional && p.activo !== false) 
                 : [];
+            
+            // Cargar personas adicionales ACTIVAS (esAdicional = true, activo = true)
+            const personasAdicionales = inv.personas 
+                ? inv.personas.filter(p => p.esAdicional && p.activo !== false) 
+                : [];
+            
             updatePersonasFields(personasEspecificas);
+            renderPersonasAdicionales(personasAdicionales);
             
             document.getElementById('modal-form').classList.add('active');
+        }
+        
+        function renderPersonasAdicionales(adicionales) {
+            const section = document.getElementById('personas-adicionales-section');
+            const list = document.getElementById('personas-adicionales-list');
+            
+            if (adicionales.length === 0) {
+                section.classList.add('hidden');
+                return;
+            }
+            
+            section.classList.remove('hidden');
+            list.innerHTML = '';
+            
+            adicionales.forEach(persona => {
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-3 p-2 rounded bg-white';
+                div.innerHTML = `
+                    <svg class="w-4 h-4 text-seedling flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m7 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div class="flex-1">
+                        <p class="text-sm font-medium text-evergreen">${persona.nombreCompleto}</p>
+                        <p class="text-xs text-evergreen opacity-60">Agregado por invitado • Confirmado</p>
+                    </div>
+                `;
+                list.appendChild(div);
+            });
         }
         
         function updatePersonasFields(existingPersonas = []){

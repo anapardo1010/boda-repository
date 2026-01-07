@@ -259,11 +259,13 @@
         </div>
     </div>
     
-    <div id="error-content" class="hidden min-h-screen flex items-center justify-center px-6">
-        <div class="text-center max-w-md">
-            <h2 class="font-playfair text-4xl text-ebony mb-4">Invitación no encontrada</h2>
-            <p class="text-evergreen mb-6">Lo sentimos, no pudimos encontrar tu invitación.</p>
-            <p class="text-sm text-evergreen opacity-70">Por favor, verifica el enlace o contacta a los novios.</p>
+    <div id="error-content" class="hidden" style="display: none;" >
+        <div class="min-h-screen flex items-center justify-center px-6">
+            <div class="text-center max-w-md">
+                <h2 class="font-playfair text-4xl text-ebony mb-4">Invitación no encontrada</h2>
+                <p class="text-evergreen mb-6">Lo sentimos, no pudimos encontrar tu invitación.</p>
+                <p class="text-sm text-evergreen opacity-70">Por favor, verifica el enlace o contacta a los novios.</p>
+            </div>
         </div>
     </div>
     
@@ -739,6 +741,7 @@
         function displayInvitado() {
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('error-content').classList.add('hidden');
+            document.getElementById('error-content').style.display = 'none';
             document.getElementById('main-content').classList.remove('hidden');
             
             const esSingular = currentInvitado.pasesTotales === 1;
@@ -767,7 +770,11 @@
         
         function showError() {
             document.getElementById('loading').classList.add('hidden');
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('main-content').classList.add('hidden');
+            document.getElementById('main-content').style.display = 'none';
             document.getElementById('error-content').classList.remove('hidden');
+            document.getElementById('error-content').style.display = 'flex';
         }
         
         function showModal() {
