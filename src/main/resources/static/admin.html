@@ -209,7 +209,7 @@
                     <input type="number" id="pasesTotales" required min="1" 
                            class="w-full px-4 py-3 border border-grey-cotton rounded-lg focus:ring-2 focus:ring-seedling focus:border-transparent"
                            placeholder="4"
-                           onchange="updatePersonasFields()">
+                           onchange="updatePersonasFieldsPreservingData()">
                 </div>
                 
                 <!-- Gestión de nombres de invitados específicos -->
@@ -507,6 +507,60 @@
                            class="persona-nombre flex-1 px-3 py-2 border border-grey-cotton rounded-lg text-sm focus:ring-2 focus:ring-seedling focus:border-transparent" 
                            placeholder="Nombre completo (opcional)"
                            value="${persona ? persona.nombreCompleto : ''}">
+                    <button type="button" 
+                            onclick="clearPersonaField(${i})"
+                            class="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-500 hover:text-white transition-all text-xs flex-shrink-0">
+                        ✕
+                    </button>
+                `;
+                list.appendChild(div);
+            }
+        }
+        
+        function updatePersonasFieldsPreservingData(){
+            const pasesTotales = parseInt(document.getElementById('pasesTotales').value) || 0;
+            
+            if (pasesTotales === 0) {
+                document.getElementById('personas-section').classList.add('hidden');
+                return;
+            }
+            
+            document.getElementById('personas-section').classList.remove('hidden');
+            const list = document.getElementById('personas-list');
+            
+            // Leer los datos actuales del DOM
+            const currentInputs = list.querySelectorAll('.persona-nombre');
+            const currentIds = list.querySelectorAll('.persona-id');
+            const currentData = [];
+            
+            currentInputs.forEach((input, index) => {
+                currentData.push({
+                    id: currentIds[index] ? currentIds[index].value : '',
+                    nombre: input.value.trim()
+                });
+            });
+            
+            // Limpiar y regenerar
+            list.innerHTML = '';
+            
+            for (let i = 0; i < pasesTotales; i++) {
+                const div = document.createElement('div');
+                div.className = 'flex items-center gap-2';
+                
+                // Usar datos existentes si están disponibles, sino vacío
+                const currentValue = currentData[i];
+                const nombre = currentValue ? currentValue.nombre : '';
+                const id = currentValue ? currentValue.id : '';
+                
+                div.innerHTML = `
+                    <input type="hidden" class="persona-id" value="${id}">
+                    <span class="flex-shrink-0 w-8 h-8 rounded-full bg-grey-cotton flex items-center justify-center text-xs font-medium text-evergreen">
+                        ${i + 1}
+                    </span>
+                    <input type="text" 
+                           class="persona-nombre flex-1 px-3 py-2 border border-grey-cotton rounded-lg text-sm focus:ring-2 focus:ring-seedling focus:border-transparent" 
+                           placeholder="Nombre completo (opcional)"
+                           value="${nombre}">
                     <button type="button" 
                             onclick="clearPersonaField(${i})"
                             class="w-8 h-8 rounded-full bg-red-100 text-red-600 hover:bg-red-500 hover:text-white transition-all text-xs flex-shrink-0">
