@@ -774,12 +774,14 @@
                         const listHtml = personasConfirmadas.map(p => `<li class="text-base text-evergreen mb-1">✓ ${p.nombreCompleto}</li>`).join('');
                         const section = document.createElement('div');
                         section.className = 'bg-seedling bg-opacity-10 rounded-xl p-8 text-center mb-8';
+                        section.setAttribute('data-aos', 'zoom-in');
                         section.innerHTML = `
                             <p class="font-playfair text-3xl text-ebony mb-6">Asistentes Confirmados</p>
                             <p class="text-sm text-evergreen opacity-70 mb-4">Estos son los nombres registrados para tu invitación:</p>
                             <ul class="inline-block text-left space-y-1">${listHtml}</ul>
                         `;
-                        document.getElementById('pases-section').insertAdjacentElement('afterend', section);
+                        const confirmedDiv = document.getElementById('already-confirmed');
+                        confirmedDiv.parentNode.insertBefore(section, confirmedDiv);
                     }
                 }
             }
