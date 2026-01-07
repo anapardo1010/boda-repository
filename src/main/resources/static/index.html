@@ -756,15 +756,11 @@
                 ? 'especialmente para ti'
                 : 'especialmente para ustedes';
             
-            document.getElementById('pases-input').max = currentInvitado.pasesTotales;
-            document.getElementById('pases-max').textContent = `Máximo ${currentInvitado.pasesTotales} persona${esSingular ? '' : 's'}`;
-            
             // Check if already confirmed
             if (currentInvitado.confirmado) {
                 document.getElementById('already-confirmed').classList.remove('hidden');
                 document.getElementById('confirmed-details').textContent = `${currentInvitado.pasesConfirmados} persona${currentInvitado.pasesConfirmados > 1 ? 's' : ''} confirmada${currentInvitado.pasesConfirmados > 1 ? 's' : ''}`;
                 document.getElementById('confirm-button').textContent = 'Actualizar Confirmación';
-                document.getElementById('pases-input').value = currentInvitado.pasesConfirmados;
                 document.getElementById('mensaje').value = currentInvitado.mensaje || '';
             }
         }
