@@ -10,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -47,13 +48,6 @@ public class InvitadoController {
         if (invitadoOpt.isPresent()) {
             Invitado invitado = invitadoOpt.get();
             
-            // Validar que no confirme más personas de las permitidas
-            if (request.getPasesConfirmados() > invitado.getPasesTotales()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
-            }
-            
-            invitado.setPasesConfirmados(request.getPasesConfirmados());
-            invitado.setConfirmado(request.getPasesConfirmados() > 0);
             invitado.setMensaje(request.getMensaje() != null ? request.getMensaje() : "");
             
             // PERSONAS ESPECÍFICAS (esAdicional = false): Solo actualizar confirmado, NUNCA eliminar
@@ -66,27 +60,55 @@ public class InvitadoController {
                 }
             }
             
-            // PERSONAS ADICIONALES (esAdicional = true): Eliminar y reemplazar completamente
+            // PERSONAS ADICIONALES (esAdicional = true): Actualizar existentes o crear nuevas
             if (request.getNombresAdicionales() != null) {
-                // Remover TODAS las personas adicionales anteriores
-                invitado.getPersonas().removeIf(p -> p.getEsAdicional());
+                // Primero, eliminar las personas adicionales que ya NO están en la lista
+                List<Long> idsAdicionales = request.getNombresAdicionales().stream()
+                    .map(ConfirmacionRequest.PersonaAdicional::getPersonaId)
+                    .filter(id -> id != null)
+                    .toList();
                 
-                // Agregar SOLO las nuevas personas adicionales con nombre
+                invitado.getPersonas().removeIf(p -> 
+                    p.getEsAdicional() && p.getId() != null && !idsAdicionales.contains(p.getId())
+                );
+                
+                // Luego, actualizar o crear personas adicionales
                 int maxOrden = invitado.getPersonas().stream()
                     .mapToInt(InvitadoPersona::getOrden)
                     .max()
                     .orElse(0);
                     
                 for (int i = 0; i < request.getNombresAdicionales().size(); i++) {
-                    String nombre = request.getNombresAdicionales().get(i);
+                    ConfirmacionRequest.PersonaAdicional pa = request.getNombresAdicionales().get(i);
+                    String nombre = pa.getNombre();
+                    
                     if (nombre != null && !nombre.trim().isEmpty()) {
-                        InvitadoPersona persona = new InvitadoPersona(invitado, nombre.trim(), maxOrden + i + 1);
-                        persona.setEsAdicional(true);
-                        persona.setConfirmado(true);  // Adicionales siempre confirmados
-                        invitado.getPersonas().add(persona);
+                        if (pa.getPersonaId() != null) {
+                            // Actualizar persona existente
+                            invitado.getPersonas().stream()
+                                .filter(p -> p.getId() != null && p.getId().equals(pa.getPersonaId()))
+                                .findFirst()
+                                .ifPresent(persona -> {
+                                    persona.setNombreCompleto(nombre.trim());
+                                    persona.setConfirmado(true);
+                                });
+                        } else {
+                            // Crear nueva persona adicional
+                            InvitadoPersona persona = new InvitadoPersona(invitado, nombre.trim(), maxOrden + i + 1);
+                            persona.setEsAdicional(true);
+                            persona.setConfirmado(true);
+                            invitado.getPersonas().add(persona);
+                        }
                     }
                 }
             }
+            
+            // ACTUALIZAR pasesConfirmados: contar personas con confirmado=true
+            long confirmados = invitado.getPersonas().stream()
+                .filter(InvitadoPersona::getConfirmado)
+                .count();
+            invitado.setPasesConfirmados((int) confirmados);
+            invitado.setConfirmado(confirmados > 0);
             
             Invitado guardado = invitadoRepository.save(invitado);
             return ResponseEntity.ok(guardado);

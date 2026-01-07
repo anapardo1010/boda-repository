@@ -812,7 +812,7 @@
                                        data-persona-id="${persona.id}" 
                                        data-type="especifico"
                                        onchange="updateConfirmCount()"
-                                       ${currentInvitado.confirmado ? 'checked' : ''}>
+                                       ${persona.confirmado ? 'checked' : ''}>
                                 <span class="toggle-slider"></span>
                             </label>
                         </div>
@@ -821,7 +821,8 @@
                 });
             }
             
-            // 2. Pases adicionales (vacíos para llenar)
+            // 2. Pases adicionales (existentes y disponibles)
+            const personasAdicionales = currentInvitado.personas.filter(p => p.esAdicional) || [];
             if (pasesAdicionales > 0) {
                 const container = document.getElementById('pases-adicionales-container');
                 const list = document.getElementById('pases-adicionales-list');
@@ -829,6 +830,7 @@
                 list.innerHTML = '';
                 
                 for (let i = 0; i < pasesAdicionales; i++) {
+                    const personaExistente = personasAdicionales[i];
                     const card = document.createElement('div');
                     card.className = 'pase-adicional-card border border-grey-cotton rounded-lg p-4';
                     card.innerHTML = `
@@ -838,14 +840,17 @@
                                        class="pase-adicional-checkbox" 
                                        data-index="${i}"
                                        data-type="adicional"
-                                       onchange="togglePaseAdicional(${i})">
+                                       ${personaExistente ? `data-persona-id="${personaExistente.id}"` : ''}
+                                       onchange="togglePaseAdicional(${i})"
+                                       ${personaExistente ? 'checked' : ''}>
                                 <span class="toggle-slider"></span>
                             </label>
                             <div class="flex-1">
                                 <input type="text" 
                                        id="adicional-nombre-${i}"
                                        placeholder="Nombre del acompañante (opcional)"
-                                       disabled
+                                       value="${personaExistente ? personaExistente.nombreCompleto : ''}"
+                                       ${personaExistente ? '' : 'disabled'}
                                        class="w-full px-3 py-2 border border-grey-cotton rounded-lg text-sm focus:ring-2 focus:ring-seedling focus:border-transparent disabled:bg-grey-cotton disabled:opacity-50">
                                 <p class="text-xs text-evergreen opacity-70 mt-1">Pase adicional ${i + 1}</p>
                             </div>
@@ -910,7 +915,10 @@
                     const nombre = nombreInput.value.trim();
                     
                     if (nombre) {
-                        pasesAdicionales.push(nombre);
+                        pasesAdicionales.push({
+                            personaId: checkbox.dataset.personaId ? parseInt(checkbox.dataset.personaId) : null,
+                            nombre: nombre
+                        });
                     }
                 }
             });

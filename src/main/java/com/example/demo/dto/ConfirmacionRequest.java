@@ -8,7 +8,7 @@ public class ConfirmacionRequest {
     private String mensaje;
     private List<String> nombresInvitados; // Mantener por compatibilidad
     private List<PersonaConfirmacion> personasEspecificas; // Nueva estructura
-    private List<String> nombresAdicionales; // Nuevos pases adicionales
+    private List<PersonaAdicional> nombresAdicionales; // Nuevos pases adicionales con ID
     
     public ConfirmacionRequest() {}
     
@@ -59,11 +59,11 @@ public class ConfirmacionRequest {
         this.personasEspecificas = personasEspecificas;
     }
     
-    public List<String> getNombresAdicionales() {
+    public List<PersonaAdicional> getNombresAdicionales() {
         return nombresAdicionales;
     }
     
-    public void setNombresAdicionales(List<String> nombresAdicionales) {
+    public void setNombresAdicionales(List<PersonaAdicional> nombresAdicionales) {
         this.nombresAdicionales = nombresAdicionales;
     }
     
@@ -93,6 +93,35 @@ public class ConfirmacionRequest {
         
         public void setConfirmado(boolean confirmado) {
             this.confirmado = confirmado;
+        }
+    }
+    
+    // Inner class para las personas adicionales con ID opcional
+    public static class PersonaAdicional {
+        private Long personaId; // null si es nueva
+        private String nombre;
+        
+        public PersonaAdicional() {}
+        
+        public PersonaAdicional(Long personaId, String nombre) {
+            this.personaId = personaId;
+            this.nombre = nombre;
+        }
+        
+        public Long getPersonaId() {
+            return personaId;
+        }
+        
+        public void setPersonaId(Long personaId) {
+            this.personaId = personaId;
+        }
+        
+        public String getNombre() {
+            return nombre;
+        }
+        
+        public void setNombre(String nombre) {
+            this.nombre = nombre;
         }
     }
 }
