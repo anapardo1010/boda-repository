@@ -682,8 +682,10 @@
                 }
                 if(response.ok){
                     closeModal();
-                    loadData();
                     alert('¡Invitado guardado!');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
                 }else{
                     const error=await response.json();
                     alert(error.error||'Error al guardar');
@@ -699,8 +701,10 @@
             try{
                 const response=await fetch(`${API_BASE}/invitados/${id}`,{method:'DELETE'});
                 if(response.ok){
-                    loadData();
                     alert('Invitado eliminado');
+                    setTimeout(() => {
+                        location.reload();
+                    }, 500);
                 }else{
                     alert('Error al eliminar');
                 }

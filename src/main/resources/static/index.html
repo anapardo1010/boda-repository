@@ -138,7 +138,7 @@
             100% { transform: rotate(360deg); }
         }
         .modal-overlay {
-            position: absolute;
+            position: fixed;
             top: 0;
             left: 0;
             right: 0;
@@ -147,8 +147,7 @@
             display: none;
             align-items: center;
             justify-content: center;
-            border-radius: 1rem;
-            z-index: 10;
+            z-index: 50;
         }
         .modal-overlay.active { display: flex; }
         .form-content.loading { opacity: 0.3; pointer-events: none; }
@@ -989,6 +988,10 @@
                                 <p class="font-playfair text-xl text-evergreen">Confirmando asistencia...</p>
                             </div>
                         `;
+                        // Reload page after 1 second
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1000);
                     }, 2500);
                 } else {
                     document.getElementById('error-message').textContent = 'Error al confirmar. Intenta nuevamente.';
