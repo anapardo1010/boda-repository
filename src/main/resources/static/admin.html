@@ -109,6 +109,9 @@
             <button onclick="showTab('invitados')" id="tab-invitados" class="tab-button px-6 py-3 rounded-full font-medium whitespace-nowrap transition-all bg-grey-cotton">
                 👥 Invitados
             </button>
+            <button onclick="showTab('mesas')" id="tab-mesas" class="tab-button px-6 py-3 rounded-full font-medium whitespace-nowrap transition-all bg-grey-cotton">
+                🪑 Mesas
+            </button>
             <button onclick="showTab('mensajes')" id="tab-mensajes" class="tab-button px-6 py-3 rounded-full font-medium whitespace-nowrap transition-all bg-grey-cotton">
                 💌 Mensajes
             </button>
@@ -163,6 +166,34 @@
 
         <div id="content-invitados" class="tab-content hidden">
             <div class="space-y-4" id="invitados-list">
+            </div>
+        </div>
+
+        <div id="content-mesas" class="tab-content hidden">
+            <div class="mb-6 flex justify-between items-center">
+                <div>
+                    <h2 class="font-playfair text-3xl text-ebony mb-2">Distribución de Mesas</h2>
+                    <p class="text-evergreen opacity-70">Organiza a tus invitados por mesa</p>
+                </div>
+                <button onclick="showNuevaMesaModal()" class="bg-seedling text-white px-6 py-3 rounded-full font-medium hover:bg-evergreen transition-all">
+                    + Nueva Mesa
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Mesas -->
+                <div>
+                    <h3 class="font-medium text-evergreen mb-4">Mesas del Salón</h3>
+                    <div id="mesas-list" class="space-y-3">
+                    </div>
+                </div>
+                
+                <!-- Personas sin mesa -->
+                <div>
+                    <h3 class="font-medium text-evergreen mb-4">Invitados Confirmados Sin Mesa</h3>
+                    <div id="personas-sin-mesa-list" class="space-y-2 max-h-[600px] overflow-y-auto">
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -259,16 +290,59 @@
         </div>
     </div>
 
+    <!-- Modal para crear/editar mesa -->
+    <div id="modal-mesa" class="modal">
+        <div class="bg-white rounded-2xl max-w-md w-full mx-4 p-6 shadow-2xl">
+            <h3 id="modal-mesa-title" class="font-playfair text-3xl text-ebony mb-6 text-center">Nueva Mesa</h3>
+            <form id="mesa-form" class="space-y-4">
+                <input type="hidden" id="mesa-id">
+                <div>
+                    <label class="block text-sm font-medium text-evergreen mb-2">Nombre de la Mesa</label>
+                    <input type="text" id="mesa-nombre" required 
+                           class="w-full px-4 py-3 border border-grey-cotton rounded-lg focus:ring-2 focus:ring-seedling focus:border-transparent"
+                           placeholder="Mesa 1">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-evergreen mb-2">Forma</label>
+                    <select id="mesa-forma" required 
+                            class="w-full px-4 py-3 border border-grey-cotton rounded-lg focus:ring-2 focus:ring-seedling focus:border-transparent">
+                        <option value="circulo">⭕ Circular</option>
+                        <option value="cuadrado">⬜ Cuadrada</option>
+                        <option value="hexagono">⬡ Hexagonal</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-evergreen mb-2">Capacidad</label>
+                    <input type="number" id="mesa-capacidad" required min="1" max="20"
+                           class="w-full px-4 py-3 border border-grey-cotton rounded-lg focus:ring-2 focus:ring-seedling focus:border-transparent"
+                           placeholder="10">
+                </div>
+                <div class="flex gap-3 pt-4">
+                    <button type="submit" class="flex-1 bg-seedling text-white px-6 py-3 rounded-full font-medium hover:bg-evergreen transition-all">
+                        Guardar
+                    </button>
+                    <button type="button" onclick="closeMesaModal()" 
+                            class="flex-1 bg-grey-cotton text-evergreen px-6 py-3 rounded-full font-medium hover:bg-evergreen hover:text-white transition-all">
+                        Cancelar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
         const API_BASE='/api/admin';
         const APP_URL=window.location.origin;
         let invitados=[];
+        let mesas=[];
+        let personasSinMesa=[];
         AOS.init({duration:800,once:true});
 
         document.addEventListener('DOMContentLoaded',()=>{
             loadData();
             document.getElementById('invitado-form').addEventListener('submit',handleSubmit);
+            document.getElementById('mesa-form').addEventListener('submit',handleMesaSubmit);
         });
 
         function showTab(tab){
@@ -276,6 +350,10 @@
             document.querySelectorAll('.tab-button').forEach(el=>el.classList.remove('active'));
             document.getElementById(`content-${tab}`).classList.remove('hidden');
             document.getElementById(`tab-${tab}`).classList.add('active');
+            
+            if(tab === 'mesas'){
+                loadMesas();
+            }
         }
 
         async function loadData(){
@@ -740,6 +818,259 @@
         
         function downloadLista(){
             window.open(`${API_BASE}/export-lista`, '_blank');
+        }
+
+        // ============ FUNCIONES DE MESAS ============
+        
+        async function loadMesas(){
+            try{
+                const [mesasRes, personasRes] = await Promise.all([
+                    fetch(`${API_BASE}/mesas`),
+                    fetch(`${API_BASE}/mesas/personas-sin-mesa`)
+                ]);
+                mesas = await mesasRes.json();
+                personasSinMesa = await personasRes.json();
+                renderMesas();
+                renderPersonasSinMesa();
+            }catch(error){
+                console.error('Error:', error);
+                alert('Error al cargar mesas');
+            }
+        }
+
+        function getFormaIcon(forma){
+            const iconos = {
+                'circulo': '⭕',
+                'cuadrado': '⬜',
+                'hexagono': '⬡'
+            };
+            return iconos[forma] || '⭕';
+        }
+
+        function renderMesas(){
+            const list = document.getElementById('mesas-list');
+            
+            if(mesas.length === 0){
+                list.innerHTML = `
+                    <div class="card p-8 text-center">
+                        <p class="text-evergreen opacity-60">No hay mesas creadas. Crea tu primera mesa.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = mesas.map(mesa => {
+                const ocupados = mesa.personas ? mesa.personas.length : 0;
+                const disponibles = mesa.capacidad - ocupados;
+                const porcentaje = (ocupados / mesa.capacidad) * 100;
+                const colorClase = porcentaje >= 100 ? 'bg-red-100 border-red-300' : 
+                                  porcentaje >= 80 ? 'bg-yellow-100 border-yellow-300' : 
+                                  'bg-green-100 border-green-300';
+                
+                return `
+                    <div class="card p-4 ${colorClase} border-2 mesa-drop-zone" 
+                         data-mesa-id="${mesa.id}"
+                         ondragover="allowDrop(event)"
+                         ondrop="dropPersona(event, ${mesa.id})">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-2">
+                                <span class="text-3xl">${getFormaIcon(mesa.forma)}</span>
+                                <div>
+                                    <h3 class="font-playfair text-xl text-ebony">${mesa.nombre}</h3>
+                                    <p class="text-xs text-evergreen opacity-70">${mesa.forma}</p>
+                                </div>
+                            </div>
+                            <div class="flex gap-1">
+                                <button onclick="editMesa(${mesa.id})" 
+                                    class="w-8 h-8 rounded-full bg-white hover:bg-evergreen hover:text-white transition-all text-sm">✏️</button>
+                                <button onclick="deleteMesa(${mesa.id}, '${mesa.nombre}')" 
+                                    class="w-8 h-8 rounded-full bg-white hover:bg-red-500 hover:text-white transition-all text-sm">🗑️</button>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <div class="flex justify-between text-sm mb-1">
+                                <span class="text-evergreen">Ocupación</span>
+                                <span class="font-medium text-evergreen">${ocupados}/${mesa.capacidad}</span>
+                            </div>
+                            <div class="w-full bg-white rounded-full h-2">
+                                <div class="bg-seedling h-2 rounded-full transition-all" style="width: ${Math.min(porcentaje, 100)}%"></div>
+                            </div>
+                        </div>
+                        <div class="space-y-1 max-h-40 overflow-y-auto">
+                            ${mesa.personas && mesa.personas.length > 0 ? 
+                                mesa.personas.map(p => `
+                                    <div class="bg-white rounded px-2 py-1 text-sm text-evergreen flex justify-between items-center group">
+                                        <span>• ${p.nombreCompleto}</span>
+                                        <button onclick="desasignarPersona(${p.id})" 
+                                            class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-all text-xs">✕</button>
+                                    </div>
+                                `).join('') 
+                                : '<p class="text-sm text-evergreen opacity-60 text-center py-2">Vacía - Arrastra invitados aquí</p>'
+                            }
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderPersonasSinMesa(){
+            const list = document.getElementById('personas-sin-mesa-list');
+            
+            if(personasSinMesa.length === 0){
+                list.innerHTML = `
+                    <div class="card p-6 text-center">
+                        <p class="text-evergreen opacity-60 text-sm">Todos los invitados confirmados están asignados</p>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = personasSinMesa.map(persona => `
+                <div class="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-move border-2 border-grey-cotton hover:border-seedling"
+                     draggable="true"
+                     data-persona-id="${persona.id}"
+                     ondragstart="dragPersona(event, ${persona.id})">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">👤</span>
+                        <div class="flex-1">
+                            <p class="text-sm font-medium text-evergreen">${persona.nombreCompleto}</p>
+                            <p class="text-xs text-evergreen opacity-60">${persona.esAdicional ? 'Adicional' : 'Principal'}</p>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function allowDrop(event){
+            event.preventDefault();
+            event.currentTarget.classList.add('ring-2', 'ring-seedling');
+        }
+
+        function dragPersona(event, personaId){
+            event.dataTransfer.setData('personaId', personaId);
+        }
+
+        async function dropPersona(event, mesaId){
+            event.preventDefault();
+            event.currentTarget.classList.remove('ring-2', 'ring-seedling');
+            
+            const personaId = event.dataTransfer.getData('personaId');
+            
+            try{
+                const response = await fetch(`${API_BASE}/mesas/${mesaId}/asignar/${personaId}`, {
+                    method: 'PUT'
+                });
+                
+                if(response.ok){
+                    loadMesas();
+                }else{
+                    const error = await response.json();
+                    alert(error.error || 'Error al asignar');
+                }
+            }catch(error){
+                console.error('Error:', error);
+                alert('Error al asignar persona');
+            }
+        }
+
+        async function desasignarPersona(personaId){
+            try{
+                const response = await fetch(`${API_BASE}/mesas/desasignar/${personaId}`, {
+                    method: 'PUT'
+                });
+                
+                if(response.ok){
+                    loadMesas();
+                }else{
+                    alert('Error al desasignar');
+                }
+            }catch(error){
+                console.error('Error:', error);
+                alert('Error al desasignar persona');
+            }
+        }
+
+        function showNuevaMesaModal(){
+            document.getElementById('modal-mesa-title').textContent = 'Nueva Mesa';
+            document.getElementById('mesa-form').reset();
+            document.getElementById('mesa-id').value = '';
+            document.getElementById('modal-mesa').classList.add('active');
+        }
+
+        function editMesa(id){
+            const mesa = mesas.find(m => m.id === id);
+            if(!mesa) return;
+            
+            document.getElementById('modal-mesa-title').textContent = 'Editar Mesa';
+            document.getElementById('mesa-id').value = mesa.id;
+            document.getElementById('mesa-nombre').value = mesa.nombre;
+            document.getElementById('mesa-forma').value = mesa.forma;
+            document.getElementById('mesa-capacidad').value = mesa.capacidad;
+            document.getElementById('modal-mesa').classList.add('active');
+        }
+
+        function closeMesaModal(){
+            document.getElementById('modal-mesa').classList.remove('active');
+        }
+
+        async function handleMesaSubmit(e){
+            e.preventDefault();
+            
+            const id = document.getElementById('mesa-id').value;
+            const mesa = {
+                nombre: document.getElementById('mesa-nombre').value,
+                forma: document.getElementById('mesa-forma').value,
+                capacidad: parseInt(document.getElementById('mesa-capacidad').value)
+            };
+            
+            try{
+                let response;
+                if(id){
+                    response = await fetch(`${API_BASE}/mesas/${id}`, {
+                        method: 'PUT',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(mesa)
+                    });
+                }else{
+                    response = await fetch(`${API_BASE}/mesas`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(mesa)
+                    });
+                }
+                
+                if(response.ok){
+                    closeMesaModal();
+                    alert('Mesa guardada');
+                    loadMesas();
+                }else{
+                    const error = await response.json();
+                    alert(error.error || 'Error al guardar');
+                }
+            }catch(error){
+                console.error('Error:', error);
+                alert('Error al guardar mesa');
+            }
+        }
+
+        async function deleteMesa(id, nombre){
+            if(!confirm(`¿Eliminar ${nombre}? Los invitados asignados quedarán sin mesa.`)) return;
+            
+            try{
+                const response = await fetch(`${API_BASE}/mesas/${id}`, {
+                    method: 'DELETE'
+                });
+                
+                if(response.ok){
+                    alert('Mesa eliminada');
+                    loadMesas();
+                }else{
+                    alert('Error al eliminar');
+                }
+            }catch(error){
+                console.error('Error:', error);
+                alert('Error al eliminar mesa');
+            }
         }
     </script>
 </body>

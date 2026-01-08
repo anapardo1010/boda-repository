@@ -31,6 +31,10 @@ public class InvitadoPersona {
     @Column(nullable = false, columnDefinition = "boolean default true")
     private Boolean activo = true;  // Soft delete - false para ocultar sin eliminar de DB
     
+    @ManyToOne
+    @JoinColumn(name = "mesa_id")
+    private Mesa mesa;
+    
     // Constructors
     public InvitadoPersona() {}
     
@@ -98,5 +102,13 @@ public class InvitadoPersona {
     
     public void setActivo(Boolean activo) {
         this.activo = activo;
+    }
+    
+    public Mesa getMesa() {
+        return mesa;
+    }
+    
+    public void setMesa(Mesa mesa) {
+        this.mesa = mesa;
     }
 }
