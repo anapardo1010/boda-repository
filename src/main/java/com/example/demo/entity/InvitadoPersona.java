@@ -32,6 +32,7 @@ public class InvitadoPersona {
     private Boolean activo = true;  // Soft delete - false para ocultar sin eliminar de DB
     
     @ManyToOne
+    @JsonIgnore  // Evita la serialización del invitado para prevenir referencia circular
     @JoinColumn(name = "mesa_id")
     private Mesa mesa;
     
