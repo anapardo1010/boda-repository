@@ -170,29 +170,59 @@
         </div>
 
         <div id="content-mesas" class="tab-content hidden">
-            <div class="mb-6 flex justify-between items-center">
-                <div>
-                    <h2 class="font-playfair text-3xl text-ebony mb-2">Distribución de Mesas</h2>
-                    <p class="text-evergreen opacity-70">Organiza a tus invitados por mesa</p>
-                </div>
-                <button onclick="showNuevaMesaModal()" class="bg-seedling text-white px-6 py-3 rounded-full font-medium hover:bg-evergreen transition-all">
-                    + Nueva Mesa
-                </button>
-            </div>
-            
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Mesas -->
-                <div>
-                    <h3 class="font-medium text-evergreen mb-4">Mesas del Salón</h3>
-                    <div id="mesas-list" class="space-y-3">
+            <div class="mb-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+                    <div>
+                        <h2 class="font-playfair text-3xl text-ebony mb-2">Distribución de Mesas</h2>
+                        <p class="text-evergreen opacity-70">Asigna a cada invitado su mesa</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="showNuevaMesaModal()" class="bg-seedling text-white px-4 py-2 rounded-full text-sm font-medium hover:bg-evergreen transition-all">
+                            + Nueva Mesa
+                        </button>
+                        <button onclick="guardarAsignaciones()" class="bg-evergreen text-white px-6 py-2 rounded-full font-medium hover:bg-seedling transition-all">
+                            💾 Guardar Cambios
+                        </button>
                     </div>
                 </div>
                 
-                <!-- Personas sin mesa -->
-                <div>
-                    <h3 class="font-medium text-evergreen mb-4">Invitados Confirmados Sin Mesa</h3>
-                    <div id="personas-sin-mesa-list" class="space-y-2 max-h-[600px] overflow-y-auto">
-                    </div>
+                <!-- Filtros -->
+                <div class="flex gap-3 mb-4 flex-wrap">
+                    <input type="text" id="buscar-persona" placeholder="🔍 Buscar persona o familia..." 
+                           onkeyup="filtrarPersonas()"
+                           class="flex-1 min-w-[200px] px-4 py-2 border border-grey-cotton rounded-full text-sm focus:ring-2 focus:ring-seedling focus:border-transparent">
+                    <select id="filtro-mesa" onchange="filtrarPersonas()"
+                            class="px-4 py-2 border border-grey-cotton rounded-full text-sm focus:ring-2 focus:ring-seedling">
+                        <option value="">Todas las mesas</option>
+                    </select>
+                    <select id="filtro-estado" onchange="filtrarPersonas()"
+                            class="px-4 py-2 border border-grey-cotton rounded-full text-sm focus:ring-2 focus:ring-seedling">
+                        <option value="">Todos</option>
+                        <option value="asignados">Con mesa</option>
+                        <option value="sin-asignar">Sin mesa</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Resumen de mesas -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6" id="resumen-mesas">
+            </div>
+            
+            <!-- Tabla de asignaciones -->
+            <div class="card overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-grey-cotton">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-sm font-medium text-evergreen">Familia</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium text-evergreen">Invitado</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium text-evergreen">Tipo</th>
+                                <th class="px-4 py-3 text-left text-sm font-medium text-evergreen">Mesa Asignada</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-asignaciones">
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -822,16 +852,32 @@
 
         // ============ FUNCIONES DE MESAS ============
         
+        let asignacionesTemp = {}; // Almacena cambios temporales antes de guardar
+        
         async function loadMesas(){
             try{
-                const [mesasRes, personasRes] = await Promise.all([
+                const [mesasRes, invitadosRes] = await Promise.all([
                     fetch(`${API_BASE}/mesas`),
-                    fetch(`${API_BASE}/mesas/personas-sin-mesa`)
+                    fetch(`${API_BASE}/invitados`)
                 ]);
                 mesas = await mesasRes.json();
-                personasSinMesa = await personasRes.json();
-                renderMesas();
-                renderPersonasSinMesa();
+                invitados = await invitadosRes.json();
+                
+                // Inicializar asignaciones temporales
+                asignacionesTemp = {};
+                invitados.forEach(inv => {
+                    if(inv.personas){
+                        inv.personas.forEach(p => {
+                            if(p.activo && p.confirmado){
+                                asignacionesTemp[p.id] = p.mesa ? p.mesa.id : null;
+                            }
+                        });
+                    }
+                });
+                
+                renderResumenMesas();
+                renderTablaAsignaciones();
+                actualizarFiltroMesas();
             }catch(error){
                 console.error('Error:', error);
                 alert('Error al cargar mesas');
@@ -847,147 +893,220 @@
             return iconos[forma] || '⭕';
         }
 
-        function renderMesas(){
-            const list = document.getElementById('mesas-list');
+        function renderResumenMesas(){
+            const list = document.getElementById('resumen-mesas');
             
             if(mesas.length === 0){
                 list.innerHTML = `
-                    <div class="card p-8 text-center">
-                        <p class="text-evergreen opacity-60">No hay mesas creadas. Crea tu primera mesa.</p>
+                    <div class="col-span-full card p-6 text-center">
+                        <p class="text-evergreen opacity-60 text-sm">No hay mesas creadas</p>
                     </div>
                 `;
                 return;
             }
 
             list.innerHTML = mesas.map(mesa => {
-                const ocupados = mesa.personas ? mesa.personas.length : 0;
-                const disponibles = mesa.capacidad - ocupados;
-                const porcentaje = (ocupados / mesa.capacidad) * 100;
-                const colorClase = porcentaje >= 100 ? 'bg-red-100 border-red-300' : 
-                                  porcentaje >= 80 ? 'bg-yellow-100 border-yellow-300' : 
+                const asignados = Object.values(asignacionesTemp).filter(m => m === mesa.id).length;
+                const disponibles = mesa.capacidad - asignados;
+                const colorClase = disponibles <= 0 ? 'bg-red-100 border-red-300' : 
+                                  disponibles <= 2 ? 'bg-yellow-100 border-yellow-300' : 
                                   'bg-green-100 border-green-300';
                 
                 return `
-                    <div class="card p-4 ${colorClase} border-2 mesa-drop-zone" 
-                         data-mesa-id="${mesa.id}"
-                         ondragover="allowDrop(event)"
-                         ondrop="dropPersona(event, ${mesa.id})">
-                        <div class="flex justify-between items-start mb-3">
+                    <div class="card p-4 ${colorClase} border-2">
+                        <div class="flex items-center justify-between mb-2">
                             <div class="flex items-center gap-2">
-                                <span class="text-3xl">${getFormaIcon(mesa.forma)}</span>
-                                <div>
-                                    <h3 class="font-playfair text-xl text-ebony">${mesa.nombre}</h3>
-                                    <p class="text-xs text-evergreen opacity-70">${mesa.forma}</p>
-                                </div>
+                                <span class="text-2xl">${getFormaIcon(mesa.forma)}</span>
+                                <h4 class="font-medium text-evergreen text-sm">${mesa.nombre}</h4>
                             </div>
                             <div class="flex gap-1">
-                                <button onclick="editMesa(${mesa.id})" 
-                                    class="w-8 h-8 rounded-full bg-white hover:bg-evergreen hover:text-white transition-all text-sm">✏️</button>
-                                <button onclick="deleteMesa(${mesa.id}, '${mesa.nombre}')" 
-                                    class="w-8 h-8 rounded-full bg-white hover:bg-red-500 hover:text-white transition-all text-sm">🗑️</button>
+                                <button onclick="editMesa(${mesa.id})" class="text-xs hover:scale-110 transition-transform">✏️</button>
+                                <button onclick="deleteMesa(${mesa.id}, '${mesa.nombre}')" class="text-xs hover:scale-110 transition-transform">🗑️</button>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="text-evergreen">Ocupación</span>
-                                <span class="font-medium text-evergreen">${ocupados}/${mesa.capacidad}</span>
-                            </div>
-                            <div class="w-full bg-white rounded-full h-2">
-                                <div class="bg-seedling h-2 rounded-full transition-all" style="width: ${Math.min(porcentaje, 100)}%"></div>
-                            </div>
-                        </div>
-                        <div class="space-y-1 max-h-40 overflow-y-auto">
-                            ${mesa.personas && mesa.personas.length > 0 ? 
-                                mesa.personas.map(p => `
-                                    <div class="bg-white rounded px-2 py-1 text-sm text-evergreen flex justify-between items-center group">
-                                        <span>• ${p.nombreCompleto}</span>
-                                        <button onclick="desasignarPersona(${p.id})" 
-                                            class="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-all text-xs">✕</button>
-                                    </div>
-                                `).join('') 
-                                : '<p class="text-sm text-evergreen opacity-60 text-center py-2">Vacía - Arrastra invitados aquí</p>'
-                            }
+                        <div class="text-center">
+                            <p class="text-2xl font-bold text-evergreen">${asignados}/${mesa.capacidad}</p>
+                            <p class="text-xs text-evergreen opacity-70">${disponibles} disponibles</p>
                         </div>
                     </div>
                 `;
             }).join('');
         }
 
-        function renderPersonasSinMesa(){
-            const list = document.getElementById('personas-sin-mesa-list');
+        function renderTablaAsignaciones(){
+            const tbody = document.getElementById('tabla-asignaciones');
+            const todasPersonas = [];
             
-            if(personasSinMesa.length === 0){
-                list.innerHTML = `
-                    <div class="card p-6 text-center">
-                        <p class="text-evergreen opacity-60 text-sm">Todos los invitados confirmados están asignados</p>
-                    </div>
+            invitados.forEach(inv => {
+                if(inv.personas){
+                    inv.personas.forEach(p => {
+                        if(p.activo && p.confirmado){
+                            todasPersonas.push({
+                                ...p,
+                                nombreFamilia: inv.nombreFamilia
+                            });
+                        }
+                    });
+                }
+            });
+
+            if(todasPersonas.length === 0){
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="px-4 py-8 text-center text-evergreen opacity-60">
+                            No hay invitados confirmados
+                        </td>
+                    </tr>
                 `;
                 return;
             }
 
-            list.innerHTML = personasSinMesa.map(persona => `
-                <div class="bg-white rounded-lg p-3 shadow-sm hover:shadow-md transition-all cursor-move border-2 border-grey-cotton hover:border-seedling"
-                     draggable="true"
-                     data-persona-id="${persona.id}"
-                     ondragstart="dragPersona(event, ${persona.id})">
-                    <div class="flex items-center gap-2">
-                        <span class="text-lg">👤</span>
-                        <div class="flex-1">
-                            <p class="text-sm font-medium text-evergreen">${persona.nombreCompleto}</p>
-                            <p class="text-xs text-evergreen opacity-60">${persona.esAdicional ? 'Adicional' : 'Principal'}</p>
-                        </div>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function allowDrop(event){
-            event.preventDefault();
-            event.currentTarget.classList.add('ring-2', 'ring-seedling');
-        }
-
-        function dragPersona(event, personaId){
-            event.dataTransfer.setData('personaId', personaId);
-        }
-
-        async function dropPersona(event, mesaId){
-            event.preventDefault();
-            event.currentTarget.classList.remove('ring-2', 'ring-seedling');
-            
-            const personaId = event.dataTransfer.getData('personaId');
-            
-            try{
-                const response = await fetch(`${API_BASE}/mesas/${mesaId}/asignar/${personaId}`, {
-                    method: 'PUT'
-                });
-                
-                if(response.ok){
-                    loadMesas();
-                }else{
-                    const error = await response.json();
-                    alert(error.error || 'Error al asignar');
+            // Agrupar por familia
+            const porFamilia = {};
+            todasPersonas.forEach(p => {
+                if(!porFamilia[p.nombreFamilia]){
+                    porFamilia[p.nombreFamilia] = [];
                 }
+                porFamilia[p.nombreFamilia].push(p);
+            });
+
+            let html = '';
+            Object.keys(porFamilia).sort().forEach(familia => {
+                const personas = porFamilia[familia];
+                personas.forEach((p, index) => {
+                    const mesaAsignada = asignacionesTemp[p.id];
+                    const esUltimo = index === personas.length - 1;
+                    
+                    html += `
+                        <tr class="border-b ${esUltimo ? 'border-b-2 border-evergreen' : 'border-grey-cotton'} hover:bg-grey-cotton transition-colors persona-row" data-familia="${familia}" data-mesa="${mesaAsignada || ''}" data-persona-id="${p.id}">
+                            ${index === 0 ? `
+                                <td rowspan="${personas.length}" class="px-4 py-3 font-medium text-evergreen border-r-2 border-grey-cotton bg-white">
+                                    ${familia}
+                                    <br><span class="text-xs opacity-60">${personas.length} persona${personas.length > 1 ? 's' : ''}</span>
+                                </td>
+                            ` : ''}
+                            <td class="px-4 py-3 text-sm text-evergreen">
+                                ${p.nombreCompleto}
+                            </td>
+                            <td class="px-4 py-3">
+                                <span class="text-xs px-2 py-1 rounded-full ${p.esAdicional ? 'bg-blue-100 text-blue-700' : 'bg-grey-cotton text-evergreen'}">
+                                    ${p.esAdicional ? 'Adicional' : 'Principal'}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3">
+                                <select class="mesa-select w-full px-3 py-2 border border-grey-cotton rounded-lg text-sm focus:ring-2 focus:ring-seedling" 
+                                        data-persona-id="${p.id}"
+                                        onchange="cambiarMesaTemp(${p.id}, this.value)">
+                                    <option value="">Sin asignar</option>
+                                    ${mesas.map(m => {
+                                        const asignados = Object.values(asignacionesTemp).filter(mid => mid === m.id).length;
+                                        const llena = asignados >= m.capacidad && mesaAsignada !== m.id;
+                                        return `<option value="${m.id}" ${mesaAsignada === m.id ? 'selected' : ''} ${llena ? 'disabled' : ''}>
+                                            ${getFormaIcon(m.forma)} ${m.nombre} (${asignados}/${m.capacidad})${llena ? ' - Llena' : ''}
+                                        </option>`;
+                                    }).join('')}
+                                </select>
+                            </td>
+                        </tr>
+                    `;
+                });
+            });
+
+            tbody.innerHTML = html;
+        }
+
+        function cambiarMesaTemp(personaId, mesaId){
+            asignacionesTemp[personaId] = mesaId ? parseInt(mesaId) : null;
+            renderResumenMesas();
+            
+            // Actualizar opciones de dropdowns para reflejar capacidad
+            document.querySelectorAll('.mesa-select').forEach(select => {
+                const pid = parseInt(select.dataset.personaId);
+                const mesaActual = asignacionesTemp[pid];
+                
+                mesas.forEach(m => {
+                    const option = select.querySelector(`option[value="${m.id}"]`);
+                    if(option){
+                        const asignados = Object.values(asignacionesTemp).filter(mid => mid === m.id).length;
+                        const llena = asignados >= m.capacidad && mesaActual !== m.id;
+                        option.disabled = llena;
+                        option.textContent = `${getFormaIcon(m.forma)} ${m.nombre} (${asignados}/${m.capacidad})${llena ? ' - Llena' : ''}`;
+                    }
+                });
+            });
+        }
+
+        async function guardarAsignaciones(){
+            const cambios = [];
+            
+            for(const [personaId, mesaId] of Object.entries(asignacionesTemp)){
+                cambios.push({personaId: parseInt(personaId), mesaId});
+            }
+
+            if(cambios.length === 0){
+                alert('No hay cambios para guardar');
+                return;
+            }
+
+            try{
+                // Desasignar todos primero
+                for(const cambio of cambios){
+                    if(cambio.mesaId === null){
+                        await fetch(`${API_BASE}/mesas/desasignar/${cambio.personaId}`, {method: 'PUT'});
+                    }
+                }
+                
+                // Luego asignar
+                for(const cambio of cambios){
+                    if(cambio.mesaId !== null){
+                        await fetch(`${API_BASE}/mesas/${cambio.mesaId}/asignar/${cambio.personaId}`, {method: 'PUT'});
+                    }
+                }
+                
+                alert('✓ Asignaciones guardadas correctamente');
+                loadMesas();
             }catch(error){
                 console.error('Error:', error);
-                alert('Error al asignar persona');
+                alert('Error al guardar asignaciones');
             }
         }
 
-        async function desasignarPersona(personaId){
-            try{
-                const response = await fetch(`${API_BASE}/mesas/desasignar/${personaId}`, {
-                    method: 'PUT'
-                });
+        function actualizarFiltroMesas(){
+            const select = document.getElementById('filtro-mesa');
+            select.innerHTML = '<option value="">Todas las mesas</option>' + 
+                mesas.map(m => `<option value="${m.id}">${getFormaIcon(m.forma)} ${m.nombre}</option>`).join('');
+        }
+
+        function filtrarPersonas(){
+            const busqueda = document.getElementById('buscar-persona').value.toLowerCase();
+            const mesaFiltro = document.getElementById('filtro-mesa').value;
+            const estadoFiltro = document.getElementById('filtro-estado').value;
+            
+            document.querySelectorAll('.persona-row').forEach(row => {
+                const familia = row.dataset.familia.toLowerCase();
+                const nombre = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
+                const mesa = row.dataset.mesa;
                 
-                if(response.ok){
-                    loadMesas();
-                }else{
-                    alert('Error al desasignar');
+                let mostrar = true;
+                
+                if(busqueda && !familia.includes(busqueda) && !nombre.includes(busqueda)){
+                    mostrar = false;
                 }
-            }catch(error){
-                console.error('Error:', error);
-                alert('Error al desasignar persona');
-            }
+                
+                if(mesaFiltro && mesa !== mesaFiltro){
+                    mostrar = false;
+                }
+                
+                if(estadoFiltro === 'asignados' && !mesa){
+                    mostrar = false;
+                }
+                
+                if(estadoFiltro === 'sin-asignar' && mesa){
+                    mostrar = false;
+                }
+                
+                row.style.display = mostrar ? '' : 'none';
+            });
         }
 
         function showNuevaMesaModal(){

@@ -236,28 +236,32 @@ public class AdminController {
         List<Invitado> invitados = invitadoRepository.findAll();
         
         StringBuilder csv = new StringBuilder();
-        csv.append("Familia,Pases Totales,Pases Confirmados,Nombres de Invitados\n");
+        csv.append("Familia,Nombre Completo,Mesa,Pases Totales,Pases Confirmados\n");
         
         for (Invitado inv : invitados) {
             if (inv.isConfirmado()) {
                 // Solo mostrar personas ACTIVAS y con confirmado = true
-                String nombresPersonas = inv.getPersonas().stream()
+                List<InvitadoPersona> personasConfirmadas = inv.getPersonas().stream()
                     .filter(p -> p.getActivo() && p.getConfirmado())  // ACTIVAS Y CONFIRMADAS
-                    .map(InvitadoPersona::getNombreCompleto)
-                    .collect(Collectors.joining("; "));
+                    .toList();
                 
-                csv.append(String.format("\"%s\",%d,%d,\"%s\"\n",
-                    inv.getNombreFamilia(),
-                    inv.getPasesTotales(),
-                    inv.getPasesConfirmados(),
-                    nombresPersonas.isEmpty() ? "No especificado" : nombresPersonas
-                ));
+                for (InvitadoPersona persona : personasConfirmadas) {
+                    String nombreMesa = persona.getMesa() != null ? persona.getMesa().getNombre() : "Sin asignar";
+                    
+                    csv.append(String.format("\"%s\",\"%s\",\"%s\",%d,%d\n",
+                        inv.getNombreFamilia(),
+                        persona.getNombreCompleto(),
+                        nombreMesa,
+                        inv.getPasesTotales(),
+                        inv.getPasesConfirmados()
+                    ));
+                }
             }
         }
         
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.parseMediaType("text/csv"));
-        headers.setContentDispositionFormData("attachment", "lista-invitados-boda.csv");
+        headers.setContentDispositionFormData("attachment", "lista-invitados-con-mesas.csv");
         
         return ResponseEntity.ok()
             .headers(headers)
