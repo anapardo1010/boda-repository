@@ -2,7 +2,6 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invitación Imprimible</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
@@ -13,235 +12,225 @@
             box-sizing: border-box;
         }
         
-        @page {
-            size: 5in 7in;
-            margin: 0;
-        }
-        
         body {
             width: 5in;
             height: 7in;
-            margin: 0 auto;
+            margin: 0;
+            padding: 0;
             background: #F9FAFB;
             font-family: 'Montserrat', sans-serif;
             position: relative;
             overflow: hidden;
         }
         
-        .container {
-            width: 100%;
-            height: 100%;
-            padding: 0.5in 0.4in;
+        .invitation-card {
+            width: 5in;
+            height: 7in;
             position: relative;
+            background: #F9FAFB;
+            padding: 60px 50px;
+            display: table;
+        }
+        
+        /* Letras decorativas gigantes */
+        .bg-letter-g {
+            position: absolute;
+            font-family: 'Playfair Display', serif;
+            font-size: 380px;
+            font-weight: 700;
+            color: #111111;
+            line-height: 0.8;
+            top: -100px;
+            left: -60px;
+            z-index: 0;
+            opacity: 1;
+        }
+        
+        .bg-letter-l {
+            position: absolute;
+            font-family: 'Playfair Display', serif;
+            font-size: 380px;
+            font-weight: 700;
+            color: #111111;
+            line-height: 0.8;
+            bottom: -100px;
+            right: -60px;
+            z-index: 0;
+            opacity: 1;
+        }
+        
+        /* Contenido sobre las letras */
+        .content-wrapper {
+            position: relative;
+            z-index: 1;
+            height: 100%;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
         }
         
-        /* Letras decorativas de fondo */
-        .letter-g {
-            position: absolute;
-            font-family: 'Playfair Display', serif;
-            font-size: 320px;
-            font-weight: 700;
-            color: #111111;
-            line-height: 1;
-            top: -80px;
-            left: -40px;
-            z-index: 1;
-            opacity: 1;
-        }
-        
-        .letter-l {
-            position: absolute;
-            font-family: 'Playfair Display', serif;
-            font-size: 320px;
-            font-weight: 700;
-            color: #111111;
-            line-height: 1;
-            bottom: -80px;
-            right: -40px;
-            z-index: 1;
-            opacity: 1;
-        }
-        
-        /* Contenido */
-        .content {
-            position: relative;
-            z-index: 2;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-        }
-        
-        .header {
+        .top-section {
             text-align: left;
-            margin-top: 20px;
         }
         
-        .header-text {
-            font-size: 7px;
-            letter-spacing: 3px;
+        .invitation-text {
+            font-size: 9px;
+            letter-spacing: 2.5px;
             text-transform: uppercase;
             color: #82907E;
             font-weight: 500;
-            margin-bottom: 8px;
+            line-height: 1.6;
         }
         
-        .main-section {
+        .middle-section {
+            text-align: center;
             flex: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            text-align: center;
-            padding: 20px 0;
         }
         
-        .nombres {
+        .couple-names {
             font-family: 'Playfair Display', serif;
-            font-size: 48px;
+            font-size: 56px;
             color: #111111;
+            font-weight: 700;
             line-height: 1.2;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
         
         .ampersand {
-            font-size: 36px;
+            font-size: 44px;
             font-style: italic;
             color: #82907E;
-            margin: 0 4px;
+            display: inline-block;
+            margin: 0 8px;
         }
         
-        .fecha {
+        .wedding-date {
             font-family: 'Playfair Display', serif;
-            font-size: 28px;
+            font-size: 32px;
             color: #111111;
-            margin: 20px 0 5px 0;
+            margin-top: 25px;
+            margin-bottom: 6px;
+            font-weight: 400;
         }
         
-        .mes {
-            font-size: 7px;
-            letter-spacing: 2px;
+        .wedding-month {
+            font-size: 8px;
+            letter-spacing: 2.5px;
             text-transform: uppercase;
             color: #82907E;
             font-weight: 500;
         }
         
-        .footer {
+        .bottom-section {
             text-align: center;
         }
         
-        .evento {
-            margin-bottom: 15px;
+        .event-block {
+            margin-bottom: 20px;
         }
         
-        .evento-titulo {
-            font-size: 9px;
+        .event-title {
+            font-size: 10px;
             letter-spacing: 2px;
             text-transform: uppercase;
             color: #2D3A2F;
             font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .event-venue {
+            font-family: 'Playfair Display', serif;
+            font-size: 13px;
+            color: #111111;
+            font-weight: 600;
+            margin-bottom: 3px;
+        }
+        
+        .event-address {
+            font-size: 8px;
+            color: #2D3A2F;
+            line-height: 1.5;
             margin-bottom: 4px;
         }
         
-        .evento-lugar {
-            font-family: 'Playfair Display', serif;
-            font-size: 11px;
-            color: #111111;
-            margin-bottom: 2px;
-        }
-        
-        .evento-direccion {
-            font-size: 7px;
-            color: #2D3A2F;
-            opacity: 0.8;
-            line-height: 1.4;
-        }
-        
-        .evento-hora {
-            font-size: 9px;
+        .event-time {
+            font-size: 10px;
             color: #82907E;
             font-weight: 600;
-            margin-top: 3px;
         }
         
-        .divider {
-            width: 60px;
+        .separator {
+            width: 70px;
             height: 1px;
-            background: linear-gradient(to right, transparent, #82907E, transparent);
-            margin: 12px auto;
+            background: #82907E;
+            margin: 16px auto;
         }
         
-        .reception-note {
-            font-size: 7px;
+        .footer-text {
+            font-size: 8px;
             font-style: italic;
             color: #82907E;
-            margin-top: 12px;
-        }
-        
-        @media print {
-            body {
-                width: 5in;
-                height: 7in;
-                print-color-adjust: exact;
-                -webkit-print-color-adjust: exact;
-            }
-            
-            .container {
-                page-break-inside: avoid;
-            }
+            margin-top: 15px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Letras decorativas -->
-        <div class="letter-g">G</div>
-        <div class="letter-l">L</div>
+    <div class="invitation-card">
+        <!-- Letras decorativas de fondo -->
+        <div class="bg-letter-g">G</div>
+        <div class="bg-letter-l">L</div>
         
-        <div class="content">
-            <!-- Header -->
-            <div class="header">
-                <p class="header-text">Por favor acompáñanos en</p>
-                <p class="header-text">la boda de</p>
+        <!-- Contenido -->
+        <div class="content-wrapper">
+            <!-- Parte superior -->
+            <div class="top-section">
+                <div class="invitation-text">Por favor acompáñanos en</div>
+                <div class="invitation-text">la boda de</div>
             </div>
             
-            <!-- Sección principal -->
-            <div class="main-section">
-                <div class="nombres">
+            <!-- Parte central -->
+            <div class="middle-section">
+                <div class="couple-names">
                     Gaby <span class="ampersand">&</span> Luis
                 </div>
-                
-                <div class="fecha">27.06.2026</div>
-                <p class="mes">Junio</p>
+                <div class="wedding-date">27.06.2026</div>
+                <div class="wedding-month">Junio</div>
             </div>
             
-            <!-- Footer con eventos -->
-            <div class="footer">
-                <div class="evento">
-                    <p class="evento-titulo">Ceremonia Religiosa</p>
-                    <p class="evento-lugar">Parroquia San Juan Bautista</p>
-                    <p class="evento-direccion">Av San Juan 2000, Chapalita<br>Guadalajara, Jalisco</p>
-                    <p class="evento-hora">7:00 PM</p>
+            <!-- Parte inferior -->
+            <div class="bottom-section">
+                <div class="event-block">
+                    <div class="event-title">Ceremonia Religiosa</div>
+                    <div class="event-venue">Parroquia San Juan Bautista</div>
+                    <div class="event-address">
+                        Av San Juan 2000, Chapalita<br>
+                        Guadalajara, Jalisco
+                    </div>
+                    <div class="event-time">7:00 PM</div>
                 </div>
                 
-                <div class="divider"></div>
+                <div class="separator"></div>
                 
-                <div class="evento">
-                    <p class="evento-titulo">Recepción</p>
-                    <p class="evento-lugar">Salón Santa María</p>
-                    <p class="evento-direccion">C. Guadalupe Montenegro 1881<br>Guadalajara, Jalisco</p>
-                    <p class="evento-hora">8:30 PM</p>
+                <div class="event-block">
+                    <div class="event-title">Recepción</div>
+                    <div class="event-venue">Salón Santa María</div>
+                    <div class="event-address">
+                        C. Guadalupe Montenegro 1881<br>
+                        Guadalajara, Jalisco
+                    </div>
+                    <div class="event-time">8:30 PM</div>
                 </div>
                 
-                <p class="reception-note">Recepción a seguir</p>
+                <div class="footer-text">Recepción a seguir</div>
             </div>
         </div>
     </div>
     
     <script>
-        // Plantilla estática - sin personalización
         function setInvitacionData(data) {
             // Función vacía para compatibilidad
         }
