@@ -501,8 +501,6 @@
                             `:''}
                             <button onclick="copyLink('${inv.slug}')" 
                                 class="w-10 h-10 rounded-full bg-seedling text-white flex items-center justify-center hover:bg-evergreen transition-all" title="Copiar link">🔗</button>
-                            <button onclick="abrirParaImprimir()" 
-                                class="w-10 h-10 rounded-full bg-purple-500 text-white flex items-center justify-center hover:bg-purple-600 transition-all" title="Abrir invitación para imprimir">🖨️</button>
                             <button onclick="toggleBloqueo(${inv.id},${inv.confirmacionBloqueada})" 
                                 class="w-10 h-10 rounded-full ${inv.confirmacionBloqueada?'bg-yellow-500 hover:bg-yellow-600':'bg-grey-cotton hover:bg-evergreen'} text-white flex items-center justify-center transition-all" title="${inv.confirmacionBloqueada?'Desbloquear':'Bloquear'} confirmación">
                                 ${inv.confirmacionBloqueada?'🔒':'🔓'}
@@ -584,10 +582,6 @@
             navigator.clipboard.writeText(link).then(()=>{
                 alert('¡Link copiado al portapapeles!');
             });
-        }
-
-        function abrirParaImprimir(){
-            window.open('/invitacion-print.html', '_blank', 'width=800,height=1100');
         }
 
         function showAddModal(){
