@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invitación Imprimible</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        @page {
+            size: 5in 7in;
+            margin: 0;
+        }
+        
+        body {
+            width: 5in;
+            height: 7in;
+            margin: 0 auto;
+            background: #F9FAFB;
+            font-family: 'Montserrat', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .container {
+            width: 100%;
+            height: 100%;
+            padding: 0.5in 0.4in;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        
+        /* Letras decorativas de fondo */
+        .letter-g {
+            position: absolute;
+            font-family: 'Playfair Display', serif;
+            font-size: 320px;
+            font-weight: 700;
+            color: #111111;
+            line-height: 1;
+            top: -80px;
+            left: -40px;
+            z-index: 1;
+            opacity: 1;
+        }
+        
+        .letter-l {
+            position: absolute;
+            font-family: 'Playfair Display', serif;
+            font-size: 320px;
+            font-weight: 700;
+            color: #111111;
+            line-height: 1;
+            bottom: -80px;
+            right: -40px;
+            z-index: 1;
+            opacity: 1;
+        }
+        
+        /* Contenido */
+        .content {
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .header {
+            text-align: left;
+            margin-top: 20px;
+        }
+        
+        .header-text {
+            font-size: 7px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: #82907E;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .main-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px 0;
+        }
+        
+        .nombres {
+            font-family: 'Playfair Display', serif;
+            font-size: 48px;
+            color: #111111;
+            line-height: 1.2;
+            margin-bottom: 8px;
+        }
+        
+        .ampersand {
+            font-size: 36px;
+            font-style: italic;
+            color: #82907E;
+            margin: 0 4px;
+        }
+        
+        .fecha {
+            font-family: 'Playfair Display', serif;
+            font-size: 28px;
+            color: #111111;
+            margin: 20px 0 5px 0;
+        }
+        
+        .mes {
+            font-size: 7px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #82907E;
+            font-weight: 500;
+        }
+        
+        .footer {
+            text-align: center;
+        }
+        
+        .evento {
+            margin-bottom: 15px;
+        }
+        
+        .evento-titulo {
+            font-size: 9px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #2D3A2F;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .evento-lugar {
+            font-family: 'Playfair Display', serif;
+            font-size: 11px;
+            color: #111111;
+            margin-bottom: 2px;
+        }
+        
+        .evento-direccion {
+            font-size: 7px;
+            color: #2D3A2F;
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+        
+        .evento-hora {
+            font-size: 9px;
+            color: #82907E;
+            font-weight: 600;
+            margin-top: 3px;
+        }
+        
+        .divider {
+            width: 60px;
+            height: 1px;
+            background: linear-gradient(to right, transparent, #82907E, transparent);
+            margin: 12px auto;
+        }
+        
+        .reception-note {
+            font-size: 7px;
+            font-style: italic;
+            color: #82907E;
+            margin-top: 12px;
+        }
+        
+        @media print {
+            body {
+                width: 5in;
+                height: 7in;
+                print-color-adjust: exact;
+                -webkit-print-color-adjust: exact;
+            }
+            
+            .container {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Letras decorativas -->
+        <div class="letter-g">G</div>
+        <div class="letter-l">L</div>
+        
+        <div class="content">
+            <!-- Header -->
+            <div class="header">
+                <p class="header-text">Por favor acompáñanos en</p>
+                <p class="header-text">la boda de</p>
+            </div>
+            
+            <!-- Sección principal -->
+            <div class="main-section">
+                <div class="nombres">
+                    Gaby <span class="ampersand">&</span> Luis
+                </div>
+                
+                <div class="fecha">27.06.2026</div>
+                <p class="mes">Junio</p>
+            </div>
+            
+            <!-- Footer con eventos -->
+            <div class="footer">
+                <div class="evento">
+                    <p class="evento-titulo">Ceremonia Religiosa</p>
+                    <p class="evento-lugar">Parroquia San Juan Bautista</p>
+                    <p class="evento-direccion">Av San Juan 2000, Chapalita<br>Guadalajara, Jalisco</p>
+                    <p class="evento-hora">7:00 PM</p>
+                </div>
+                
+                <div class="divider"></div>
+                
+                <div class="evento">
+                    <p class="evento-titulo">Recepción</p>
+                    <p class="evento-lugar">Salón Santa María</p>
+                    <p class="evento-direccion">C. Guadalupe Montenegro 1881<br>Guadalajara, Jalisco</p>
+                    <p class="evento-hora">8:30 PM</p>
+                </div>
+                
+                <p class="reception-note">Recepción a seguir</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Plantilla estática - sin personalización
+        function setInvitacionData(data) {
+            // Función vacía para compatibilidad
+        }
+    </script>
+</body>
+</html>
