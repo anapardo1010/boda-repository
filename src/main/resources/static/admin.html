@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Control - Ana & Luis</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
@@ -587,84 +586,20 @@
             });
         }
 
-        async function descargarPDF(invitadoId){
+        function descargarPDF(invitadoId){
             const inv = invitados.find(i => i.id === invitadoId);
             if(!inv) return;
 
-            // Obtener personas confirmadas activas
-            const personasConfirmadas = inv.personas 
-                ? inv.personas.filter(p => p.confirmado && p.activo !== false).map(p => p.nombreCompleto)
-                : [];
-
-            // Cargar la plantilla HTML
-            const response = await fetch('/invitacion-print.html');
-            const htmlTemplate = await response.text();
+            // Llamar al endpoint del backend que genera el PDF correctamente
+            const pdfUrl = `/api/pdf/invitacion/${invitadoId}`;
             
-            // Crear iframe oculto para renderizar la plantilla
-            const iframe = document.createElement('iframe');
-            iframe.style.position = 'absolute';
-            iframe.style.width = '5in';
-            iframe.style.height = '7in';
-            iframe.style.top = '-9999px';
-            iframe.style.left = '-9999px';
-            document.body.appendChild(iframe);
-            
-            // Escribir el HTML en el iframe
-            iframe.contentDocument.open();
-            iframe.contentDocument.write(htmlTemplate);
-            iframe.contentDocument.close();
-            
-            // Esperar a que cargue
-            await new Promise(resolve => {
-                if (iframe.contentDocument.readyState === 'complete') {
-                    resolve();
-                } else {
-                    iframe.onload = resolve;
-                }
-            });
-            
-            // Inyectar datos personalizados
-            iframe.contentWindow.setInvitacionData({
-                nombreFamilia: inv.nombreFamilia,
-                pases: inv.pasesConfirmados || inv.pasesTotales,
-                personas: personasConfirmadas
-            });
-            
-            // Esperar un momento para que se apliquen los cambios
-            await new Promise(resolve => setTimeout(resolve, 100));
-
-            // Configuración del PDF
-            const opt = {
-                margin: 0,
-                filename: `Invitacion-${inv.nombreFamilia.replace(/\s+/g, '-')}.pdf`,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { 
-                    scale: 3,
-                    useCORS: true,
-                    letterRendering: true,
-                    logging: false
-                },
-                jsPDF: { 
-                    unit: 'in', 
-                    format: [5, 7], 
-                    orientation: 'portrait',
-                    compress: true
-                }
-            };
-
-            // Generar PDF desde el iframe
-            html2pdf()
-                .set(opt)
-                .from(iframe.contentDocument.body)
-                .save()
-                .then(() => {
-                    document.body.removeChild(iframe);
-                })
-                .catch(error => {
-                    console.error('Error generando PDF:', error);
-                    document.body.removeChild(iframe);
-                    alert('Error al generar el PDF. Por favor intenta de nuevo.');
-                });
+            // Crear un enlace temporal y hacer click para descargar
+            const link = document.createElement('a');
+            link.href = pdfUrl;
+            link.download = `Invitacion-${inv.nombreFamilia.replace(/\s+/g, '-')}.pdf`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
         }
 
         function showAddModal(){
