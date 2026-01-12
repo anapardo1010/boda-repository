@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Panel de Control - Ana & Luis</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;500;600&display=swap');
@@ -501,6 +502,8 @@
                             `:''}
                             <button onclick="copyLink('${inv.slug}')" 
                                 class="w-10 h-10 rounded-full bg-seedling text-white flex items-center justify-center hover:bg-evergreen transition-all" title="Copiar link">🔗</button>
+                            <button onclick="descargarPDF(${inv.id})" 
+                                class="w-10 h-10 rounded-full bg-purple-500 text-white flex items-center justify-center hover:bg-purple-600 transition-all" title="Descargar PDF imprimible">📄</button>
                             <button onclick="toggleBloqueo(${inv.id},${inv.confirmacionBloqueada})" 
                                 class="w-10 h-10 rounded-full ${inv.confirmacionBloqueada?'bg-yellow-500 hover:bg-yellow-600':'bg-grey-cotton hover:bg-evergreen'} text-white flex items-center justify-center transition-all" title="${inv.confirmacionBloqueada?'Desbloquear':'Bloquear'} confirmación">
                                 ${inv.confirmacionBloqueada?'🔒':'🔓'}
@@ -581,6 +584,129 @@
             const link=`${APP_URL}/?id=${slug}`;
             navigator.clipboard.writeText(link).then(()=>{
                 alert('¡Link copiado al portapapeles!');
+            });
+        }
+
+        function descargarPDF(invitadoId){
+            const inv = invitados.find(i => i.id === invitadoId);
+            if(!inv) return;
+
+            // Obtener personas confirmadas activas
+            const personasConfirmadas = inv.personas 
+                ? inv.personas.filter(p => p.confirmado && p.activo !== false)
+                : [];
+
+            // Generar HTML del PDF
+            const pdfContent = `
+                <div style="font-family: 'Playfair Display', serif; padding: 60px 40px; max-width: 800px; margin: 0 auto; background: #F9FAFB;">
+                    <!-- Header -->
+                    <div style="text-align: center; margin-bottom: 50px;">
+                        <p style="font-size: 12px; letter-spacing: 4px; text-transform: uppercase; color: #82907E; margin-bottom: 15px; font-family: 'Montserrat', sans-serif;">Nuestra Boda</p>
+                        <h1 style="font-size: 72px; color: #111111; margin: 20px 0; line-height: 1.1;">
+                            Gaby <span style="font-size: 60px; font-style: italic; color: #82907E;">&</span> Luis
+                        </h1>
+                        <div style="width: 80px; height: 1px; background: #82907E; margin: 30px auto;"></div>
+                        <p style="font-size: 36px; color: #111111; margin: 15px 0;">27.06.2026</p>
+                        <p style="font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: #82907E; font-family: 'Montserrat', sans-serif;">Junio</p>
+                    </div>
+
+                    <!-- Padres -->
+                    <div style="background: #2D3A2F; color: white; padding: 40px; margin: 40px -40px; text-align: center;">
+                        <h2 style="font-size: 32px; margin-bottom: 30px;">Nuestros Padres</h2>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                            <div>
+                                <p style="font-size: 11px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.7; margin-bottom: 15px; font-family: 'Montserrat', sans-serif;">Padres de la Novia</p>
+                                <p style="font-size: 16px; line-height: 1.8;">
+                                    Ana María Isabel Rendón Marín<br>
+                                    <span style="font-size: 12px;">&</span><br>
+                                    José Humberto Pardo Lorencés
+                                </p>
+                            </div>
+                            <div>
+                                <p style="font-size: 11px; letter-spacing: 2px; text-transform: uppercase; opacity: 0.7; margin-bottom: 15px; font-family: 'Montserrat', sans-serif;">Padres del Novio</p>
+                                <p style="font-size: 16px; line-height: 1.8;">
+                                    María Angélica Álvarez Ramos<br>
+                                    <span style="font-size: 12px;">&</span><br>
+                                    Rafael De Rosas López
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Invitación personalizada -->
+                    <div style="text-align: center; margin: 50px 0;">
+                        <h2 style="font-size: 36px; color: #111111; margin-bottom: 25px;">
+                            ${inv.nombreFamilia}
+                        </h2>
+                        <p style="font-size: 14px; color: #2D3A2F; margin-bottom: 15px; font-family: 'Montserrat', sans-serif;">Hemos reservado</p>
+                        <p style="font-size: 64px; color: #82907E; font-weight: bold; margin: 20px 0;">${inv.pasesConfirmados || inv.pasesTotales}</p>
+                        <p style="font-size: 24px; color: #2D3A2F; font-style: italic; margin-bottom: 10px;">${(inv.pasesConfirmados || inv.pasesTotales) === 1 ? 'pase' : 'pases'}</p>
+                        <p style="font-size: 14px; color: #2D3A2F; font-family: 'Montserrat', sans-serif;">para ustedes en nuestra celebración</p>
+                        
+                        ${personasConfirmadas.length > 0 ? `
+                        <div style="margin-top: 30px; text-align: left; max-width: 400px; margin-left: auto; margin-right: auto;">
+                            <p style="font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: #82907E; margin-bottom: 15px; text-align: center; font-family: 'Montserrat', sans-serif;">Invitados Confirmados</p>
+                            ${personasConfirmadas.map(p => `
+                                <p style="font-size: 14px; color: #2D3A2F; padding: 8px 0; border-bottom: 1px solid #E5E7EB; font-family: 'Montserrat', sans-serif;">✓ ${p.nombreCompleto}</p>
+                            `).join('')}
+                        </div>
+                        ` : ''}
+                    </div>
+
+                    <!-- Ceremonia Religiosa -->
+                    <div style="background: white; padding: 30px; border-radius: 12px; margin: 30px 0; box-shadow: 0 2px 8px rgba(45, 58, 47, 0.08);">
+                        <h3 style="font-size: 24px; color: #111111; margin-bottom: 20px; text-align: center;">Ceremonia Religiosa</h3>
+                        <p style="font-size: 14px; color: #2D3A2F; text-align: center; line-height: 1.8; font-family: 'Montserrat', sans-serif;">
+                            <strong>Parroquia San Juan Bautista</strong><br>
+                            Av San Juan 2000, Chapalita, 44500<br>
+                            Guadalajara, Jalisco<br>
+                            <strong style="color: #82907E;">19:00 hrs</strong>
+                        </p>
+                    </div>
+
+                    <!-- Recepción -->
+                    <div style="background: white; padding: 30px; border-radius: 12px; margin: 30px 0; box-shadow: 0 2px 8px rgba(45, 58, 47, 0.08);">
+                        <h3 style="font-size: 24px; color: #111111; margin-bottom: 20px; text-align: center;">Recepción</h3>
+                        <p style="font-size: 14px; color: #2D3A2F; text-align: center; line-height: 1.8; font-family: 'Montserrat', sans-serif;">
+                            <strong>Salón Santa María</strong><br>
+                            C. Guadalupe Montenegro 1881<br>
+                            44658 Guadalajara, Jalisco<br>
+                            <strong style="color: #82907E;">20:30 hrs</strong>
+                        </p>
+                    </div>
+
+                    <!-- Footer -->
+                    <div style="text-align: center; margin-top: 50px; padding-top: 30px; border-top: 1px solid #E5E7EB;">
+                        <p style="font-size: 12px; color: #82907E; font-style: italic;">¡Esperamos contar con tu presencia!</p>
+                    </div>
+                </div>
+            `;
+
+            // Crear elemento temporal
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = pdfContent;
+            document.body.appendChild(tempDiv);
+
+            // Configuración del PDF
+            const opt = {
+                margin: 0,
+                filename: `Invitacion-${inv.nombreFamilia.replace(/\s+/g, '-')}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { 
+                    scale: 2,
+                    useCORS: true,
+                    letterRendering: true
+                },
+                jsPDF: { 
+                    unit: 'mm', 
+                    format: 'letter', 
+                    orientation: 'portrait' 
+                }
+            };
+
+            // Generar PDF
+            html2pdf().set(opt).from(tempDiv).save().then(() => {
+                document.body.removeChild(tempDiv);
             });
         }
 
