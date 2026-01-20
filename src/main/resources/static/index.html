@@ -92,6 +92,53 @@
             background-color: var(--seedling);
             border: 3px solid var(--white-bone);
             box-shadow: 0 0 0 2px var(--seedling);
+            transition: all 0.3s ease;
+        }
+        
+        /* Efecto de iluminación en timeline */
+        .timeline-item.active::after {
+            width: 20px;
+            height: 20px;
+            left: 6px;
+            top: 2px;
+            background-color: var(--evergreen);
+            box-shadow: 0 0 0 2px var(--white-bone), 0 0 12px var(--seedling);
+        }
+        
+        .timeline-item.active h3 {
+            color: var(--evergreen);
+            font-weight: 700;
+        }
+        
+        .timeline-item.active .flex-1 {
+            opacity: 1;
+        }
+        
+        .timeline-item .flex-1 {
+            opacity: 0.6;
+            transition: opacity 0.3s ease;
+        }
+        
+        /* Ubicaciones - Alineación de tarjetas */
+        .location-card {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+        
+        .location-card .location-header {
+            flex-shrink: 0;
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .location-card .location-body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
         }
         
         .countdown-container {
@@ -137,6 +184,110 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* Transiciones minimalistas */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+        
+        @keyframes scaleIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        /* Clases para aplicar animaciones */
+        [data-animate-on-scroll] {
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 1.2s ease-out, transform 1.2s ease-out;
+        }
+        
+        [data-animate-on-scroll].animate-in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        [data-animate-left] {
+            opacity: 0;
+            transform: translateX(-20px);
+            transition: opacity 1.2s ease-out, transform 1.2s ease-out;
+        }
+        
+        [data-animate-left].animate-in {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        [data-animate-right] {
+            opacity: 0;
+            transform: translateX(20px);
+            transition: opacity 1.2s ease-out, transform 1.2s ease-out;
+        }
+        
+        [data-animate-right].animate-in {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        [data-animate-scale] {
+            opacity: 0;
+            transform: scale(0.95);
+            transition: opacity 1.2s ease-out, transform 1.2s ease-out;
+        }
+        
+        [data-animate-scale].animate-in {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        /* Delays para efecto cascada */
+        [data-delay="1"] { transition-delay: 0.2s; }
+        [data-delay="2"] { transition-delay: 0.4s; }
+        [data-delay="3"] { transition-delay: 0.6s; }
+        [data-delay="4"] { transition-delay: 0.8s; }
+        [data-delay="5"] { transition-delay: 1s; }
+        
+        [data-delay="1"].animate-in { transition-delay: 0.2s; }
+        [data-delay="2"].animate-in { transition-delay: 0.4s; }
+        [data-delay="3"].animate-in { transition-delay: 0.6s; }
+        [data-delay="4"].animate-in { transition-delay: 0.8s; }
+        [data-delay="5"].animate-in { transition-delay: 1s; }
+        
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -249,6 +400,81 @@
             text-align: center;
         }
     </style>
+    <script>
+        // Sistema de transiciones minimalistas con Intersection Observer
+        document.addEventListener('DOMContentLoaded', () => {
+            const initScrollAnimations = () => {
+                // Configurar Intersection Observer con margen para animaciones más suaves
+                const observerOptions = {
+                    threshold: 0.1,
+                    rootMargin: '0px 0px -80px 0px'  // Inicia la animación 80px antes de entrar al viewport
+                };
+                
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('animate-in');
+                            observer.unobserve(entry.target);
+                        }
+                    });
+                }, observerOptions);
+                
+                // Encontrar todos los elementos con atributos de animación
+                document.querySelectorAll('[data-animate-on-scroll], [data-animate-left], [data-animate-right], [data-animate-scale]').forEach(el => {
+                    observer.observe(el);
+                });
+            };
+            
+            // Sistema de iluminación del timeline
+            const initTimelineActive = () => {
+                const timelineItems = document.querySelectorAll('.timeline-item');
+                
+                if (timelineItems.length === 0) return;
+                
+                const highlightCenterItem = () => {
+                    const viewportCenter = window.innerHeight / 2;
+                    let closestItem = null;
+                    let closestDistance = Infinity;
+                    
+                    timelineItems.forEach(item => {
+                        const rect = item.getBoundingClientRect();
+                        const itemCenter = rect.top + rect.height / 2;
+                        const distance = Math.abs(viewportCenter - itemCenter);
+                        
+                        if (distance < closestDistance) {
+                            closestDistance = distance;
+                            closestItem = item;
+                        }
+                    });
+                    
+                    // Remover clase active de todos
+                    timelineItems.forEach(item => item.classList.remove('active'));
+                    
+                    // Agregar clase active al más cercano
+                    if (closestItem && closestDistance < window.innerHeight / 2) {
+                        closestItem.classList.add('active');
+                    }
+                };
+                
+                // Ejecutar al scroll
+                window.addEventListener('scroll', highlightCenterItem, { passive: true });
+                
+                // Ejecutar una vez al cargar
+                highlightCenterItem();
+            };
+            
+            // Ejecutar después de que carguen los datos
+            if (document.querySelectorAll('[data-animate-on-scroll]').length > 0) {
+                initScrollAnimations();
+            } else {
+                // Si no hay elementos aún, esperar un poco
+                setTimeout(initScrollAnimations, 500);
+            }
+            
+            // Inicializar timeline active
+            setTimeout(initTimelineActive, 100);
+        });
+    </script>
 </head>
 <body class="antialiased">
     <div id="loading" class="loading">
@@ -308,9 +534,9 @@
         
         <section class="py-24 px-6 bg-evergreen text-white" data-aos="fade-up">
             <div class="max-w-4xl mx-auto">
-                <h2 class="font-playfair text-4xl md:text-5xl text-center mb-16 tracking-tight">Nuestros Padres</h2>
+                <h2 class="font-playfair text-4xl md:text-5xl text-center mb-16 tracking-tight" data-animate-on-scroll>Nuestros Padres</h2>
                 <div class="grid md:grid-cols-2 gap-12 md:gap-16">
-                    <div class="text-center" data-aos="fade-right" data-aos-delay="100">
+                    <div class="text-center" data-aos="fade-right" data-aos-delay="100" data-animate-left data-delay="1">
                         <p class="text-sm tracking-[0.15em] uppercase mb-4 opacity-70">Padres de la Novia</p>
                         <p class="font-playfair text-xl leading-relaxed">
                             Ana María Isabel Rendón Marín<br>
@@ -318,7 +544,7 @@
                             José Humberto Pardo Lorencés
                         </p>
                     </div>
-                    <div class="text-center" data-aos="fade-left" data-aos-delay="200">
+                    <div class="text-center" data-aos="fade-left" data-aos-delay="200" data-animate-right data-delay="2">
                         <p class="text-sm tracking-[0.15em] uppercase mb-4 opacity-70">Padres del Novio</p>
                         <p class="font-playfair text-xl leading-relaxed">
                             María Angélica Álvarez Ramos<br>
@@ -332,10 +558,10 @@
         
         <section id="invitacion" class="py-24 px-6" data-aos="fade-up">
             <div class="max-w-2xl mx-auto text-center">
-                <h2 id="welcome-text" class="font-playfair text-4xl md:text-5xl text-ebony mb-8"></h2>
+                <h2 id="welcome-text" class="font-playfair text-4xl md:text-5xl text-ebony mb-8" data-animate-on-scroll></h2>
                 
                 <!-- Pases section with highlighted number -->
-                <div class="mb-8">
+                <div class="mb-8" data-animate-on-scroll>
                     <p class="text-evergreen text-base md:text-lg mb-4" id="pases-intro-text">Hemos reservado</p>
                     <div class="flex items-center justify-center gap-4 mb-4">
                         <div class="w-16 h-px bg-seedling opacity-40"></div>
@@ -363,9 +589,9 @@
         
         <section class="py-24 px-6" data-aos="fade-up">
             <div class="max-w-3xl mx-auto">
-                <h2 class="font-playfair text-4xl md:text-5xl text-center text-ebony mb-16">Itinerario</h2>
+                <h2 class="font-playfair text-4xl md:text-5xl text-center text-ebony mb-16" data-animate-on-scroll>Itinerario</h2>
                 <div class="space-y-6">
-                    <div class="timeline-item" data-aos="fade-left" data-aos-delay="100">
+                    <div class="timeline-item" data-aos="fade-left" data-aos-delay="100" data-animate-left data-delay="1">
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex-1">
                                 <h3 class="font-playfair text-2xl text-ebony mb-2">Ceremonia Religiosa</h3>
@@ -382,7 +608,7 @@
                             </a>
                         </div>
                     </div>
-                    <div class="timeline-item" data-aos="fade-left" data-aos-delay="200">
+                    <div class="timeline-item" data-aos="fade-left" data-aos-delay="200" data-animate-left data-delay="2">
                         <div class="flex items-start justify-between gap-4">
                             <div class="flex-1">
                                 <h3 class="font-playfair text-2xl text-ebony mb-2">Recepción</h3>
@@ -399,7 +625,7 @@
                             </a>
                         </div>
                     </div>
-                    <div class="timeline-item" data-aos="fade-left" data-aos-delay="300">
+                    <div class="timeline-item" data-aos="fade-left" data-aos-delay="300" data-animate-left data-delay="3">
                         <h3 class="font-playfair text-2xl text-ebony mb-2">Cena</h3>
                         <p class="text-seedling font-medium mb-1">9:00 PM</p>
                         <p class="text-evergreen text-sm">Salón Aquiahuac</p>
@@ -425,14 +651,14 @@
         
         <section class="py-24 px-6 bg-grey-cotton" data-aos="fade-up">
             <div class="max-w-4xl mx-auto">
-                <h2 class="font-playfair text-4xl md:text-5xl text-center text-ebony mb-12">Ubicaciones</h2>
-                <div class="grid md:grid-cols-2 gap-8">
-                    <div class="bg-white rounded-2xl overflow-hidden shadow-lg" data-aos="zoom-in">
-                        <div class="p-6 text-center border-b border-grey-cotton">
+                <h2 class="font-playfair text-4xl md:text-5xl text-center text-ebony mb-12" data-animate-on-scroll>Ubicaciones</h2>
+                <div class="grid md:grid-cols-2 gap-8" style="grid-auto-rows: 1fr;">
+                    <div class="bg-white rounded-2xl overflow-hidden shadow-lg location-card" data-aos="zoom-in" data-animate-left data-delay="1">
+                        <div class="p-6 text-center border-b border-grey-cotton location-header">
                             <h3 class="font-playfair text-2xl text-ebony mb-2">Ceremonia Religiosa</h3>
                             <p class="text-sm text-evergreen">Casa de la Cristiandad</p>
                         </div>
-                        <div class="p-6">
+                        <div class="p-6 location-body">
                             <a href="https://www.google.com/maps/search/?api=1&query=Casa+de+la+Cristiandad+Puebla" 
                                target="_blank" 
                                rel="noopener noreferrer"
@@ -441,13 +667,13 @@
                             </a>
                         </div>
                     </div>
-                    <div class="bg-white rounded-2xl overflow-hidden shadow-lg" data-aos="zoom-in" data-aos-delay="100">
-                        <div class="p-6 text-center border-b border-grey-cotton">
+                    <div class="bg-white rounded-2xl overflow-hidden shadow-lg location-card" data-aos="zoom-in" data-aos-delay="100" data-animate-right data-delay="2">
+                        <div class="p-6 text-center border-b border-grey-cotton location-header">
                             <h3 class="font-playfair text-2xl text-ebony mb-2">Recepción</h3>
                             <p class="text-sm text-evergreen">Hotel Posada Señorial</p>
                             <p class="text-xs text-evergreen opacity-70 mt-1">Salón Aquiahuac</p>
                         </div>
-                        <div class="p-6">
+                        <div class="p-6 location-body">
                             <a href="https://www.google.com/maps/search/?api=1&query=Hotel+Posada+Señorial+San+Andres+Cholula" 
                                target="_blank" 
                                rel="noopener noreferrer"
@@ -462,15 +688,15 @@
         
         <section class="py-24 px-6 bg-grey-cotton" data-aos="fade-up">
             <div class="max-w-3xl mx-auto text-center">
-                <h2 class="font-playfair text-4xl md:text-5xl text-ebony mb-6">Mesa de Regalos</h2>
-                <p class="text-evergreen text-base md:text-lg mb-10 max-w-xl mx-auto leading-relaxed">
+                <h2 class="font-playfair text-4xl md:text-5xl text-ebony mb-6" data-animate-on-scroll>Mesa de Regalos</h2>
+                <p class="text-evergreen text-base md:text-lg mb-10 max-w-xl mx-auto leading-relaxed" data-animate-on-scroll>
                     Su presencia es nuestro mejor regalo. Si desean honrarnos con un detalle, hemos preparado las siguientes opciones:
                 </p>
                 
                 <div class="grid md:grid-cols-2 gap-6 mb-8">
                     <!-- Amazon -->
                     <a href="https://www.amazon.com.mx/wedding/share/b0d4g4bylu1s" target="_blank" 
-                       class="bg-white rounded-2xl p-8 hover:shadow-lg transition-all duration-300 group">
+                       class="bg-white rounded-2xl p-8 hover:shadow-lg transition-all duration-300 group" data-animate-left data-delay="1">
                         <div class="mb-6 flex flex-col items-center justify-center">
                             <svg class="w-20 h-20 text-seedling opacity-70 group-hover:opacity-100 transition-opacity mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
@@ -483,7 +709,7 @@
                     
                     <!-- Liverpool -->
                     <a href="https://mesaderegalos.liverpool.com.mx/milistaderegalos/51909325" target="_blank"
-                       class="block bg-white rounded-2xl p-8 hover:shadow-lg transition-all duration-300 group">
+                       class="block bg-white rounded-2xl p-8 hover:shadow-lg transition-all duration-300 group" data-animate-right data-delay="2">
                         <div class="mb-4">
                             <svg class="w-16 h-16 mx-auto text-seedling opacity-70 group-hover:opacity-100 transition-opacity" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
@@ -527,10 +753,10 @@
         
         <section class="py-24 px-6" data-aos="fade-up">
             <div class="max-w-6xl mx-auto">
-                <h2 class="font-playfair text-4xl md:text-5xl text-center text-ebony mb-12">Información Adicional</h2>
+                <h2 class="font-playfair text-4xl md:text-5xl text-center text-ebony mb-12" data-animate-on-scroll>Información Adicional</h2>
                 <div class="grid md:grid-cols-2 gap-8">
                     <!-- Hospedaje -->
-                    <div class="info-card" data-aos="fade-right">
+                    <div class="info-card" data-aos="fade-right" data-animate-left data-delay="1">
                         <div class="flex items-start gap-4 mb-4">
                             <svg class="w-12 h-12 text-seedling flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
@@ -558,7 +784,7 @@
                     </div>
                     
                     <!-- Estacionamiento -->
-                    <div class="info-card" data-aos="fade-left">
+                    <div class="info-card" data-aos="fade-left" data-animate-right data-delay="2">
                         <div class="flex items-start gap-4 mb-4">
                             <svg class="w-12 h-12 text-seedling flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
