@@ -992,8 +992,9 @@
             if (currentInvitado.confirmacionBloqueada) {
                 document.getElementById('confirm-button').style.display = 'none';
                 document.getElementById('already-confirmed').style.display = 'none';
-                // Mostrar lista de personas confirmadas (igual que en admin y CSV)
-                if (currentInvitado.personas && currentInvitado.personas.length > 0) {
+                
+                // Caso 1: Hubo confirmación - Mostrar lista de personas confirmadas
+                if (currentInvitado.confirmado && currentInvitado.personas && currentInvitado.personas.length > 0) {
                     const personasConfirmadas = currentInvitado.personas.filter(p => p.activo !== false && p.confirmado);
                     if (personasConfirmadas.length > 0) {
                         const listHtml = personasConfirmadas.map(p => `<li class="text-base text-evergreen mb-1">✓ ${p.nombreCompleto}</li>`).join('');
@@ -1008,6 +1009,26 @@
                         const confirmedDiv = document.getElementById('already-confirmed');
                         confirmedDiv.parentNode.insertBefore(section, confirmedDiv);
                     }
+                } else {
+                    // Caso 2: NO hubo confirmación - Mostrar mensaje empático
+                    const section = document.createElement('div');
+                    section.className = 'bg-grey-cotton rounded-xl p-10 text-center mb-8 max-w-xl mx-auto';
+                    section.setAttribute('data-aos', 'fade-up');
+                    section.innerHTML = `
+                        <svg class="w-16 h-16 mx-auto mb-4 text-seedling opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                        </svg>
+                        <p class="font-playfair text-3xl text-ebony mb-4">Entendemos que no puedan acompañarnos</p>
+                        <p class="text-evergreen text-base leading-relaxed mb-3">
+                            El periodo de confirmación ha finalizado y no recibimos respuesta de su parte.
+                        </p>
+                        <p class="text-evergreen text-base leading-relaxed">
+                            Entendemos que sus planes pueden haber cambiado. 
+                            Les enviamos un abrazo con mucho cariño.
+                        </p>
+                    `;
+                    const confirmedDiv = document.getElementById('already-confirmed');
+                    confirmedDiv.parentNode.insertBefore(section, confirmedDiv);
                 }
             }
         }
