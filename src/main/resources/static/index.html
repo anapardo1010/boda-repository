@@ -1002,20 +1002,20 @@
                 if (currentInvitado.confirmado && currentInvitado.personas && currentInvitado.personas.length > 0) {
                     const personasConfirmadas = currentInvitado.personas.filter(p => p.activo !== false && p.confirmado);
                     if (personasConfirmadas.length > 0) {
-                        const listHtml = personasConfirmadas.map(p => `<li class="text-base text-evergreen mb-1">✓ ${p.nombreCompleto}</li>`).join('');
+                        const listHtml = personasConfirmadas.map(p => `<li class=\"text-base text-evergreen mb-1\">✓ ${p.nombreCompleto}</li>`).join('');
                         const section = document.createElement('div');
-                        section.className = 'bg-seedling bg-opacity-10 rounded-xl p-10 text-center mb-8 max-w-xl mx-auto';
-                        section.setAttribute('data-aos', 'zoom-in');
+                        section.className = 'bg-grey-cotton rounded-xl p-10 text-center mb-8 max-w-xl mx-auto';
+                        section.setAttribute('data-aos', 'fade-up');
                         section.innerHTML = `
-                            <svg class="w-16 h-16 mx-auto mb-4 text-seedling opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            <svg class=\"w-16 h-16 mx-auto mb-4 text-seedling opacity-70\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
+                                <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z\"/>
                             </svg>
-                            <p class="font-playfair text-3xl text-ebony mb-4">¡Los esperamos con mucha ilusión!</p>
-                            <p class="text-evergreen text-base leading-relaxed mb-4">
+                            <p class=\"font-playfair text-3xl text-ebony mb-4\">¡Los esperamos con mucha ilusión!</p>
+                            <p class=\"text-evergreen text-base leading-relaxed mb-4\">
                                 Hemos registrado la asistencia de:
                             </p>
-                            <ul class="inline-block text-left space-y-2 mb-4">${listHtml}</ul>
-                            <p class="text-evergreen text-base leading-relaxed italic">
+                            <ul class=\"inline-block text-left space-y-2 mb-4\">${listHtml}</ul>
+                            <p class=\"text-evergreen text-base leading-relaxed italic\">
                                 Será un honor contar con su presencia en nuestro día especial.
                             </p>
                         `;
