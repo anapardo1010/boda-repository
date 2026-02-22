@@ -22,9 +22,53 @@
             color: var(--evergreen);
         }
         main, .main-panel {
-            max-width: var(--admin-max-width) !important;
-            margin-left: auto;
-            margin-right: auto;
+            max-width: 100vw !important;
+            margin-left: 0;
+            margin-right: 0;
+        }
+        .card {
+            padding: 0.7rem !important;
+            min-height: 60px;
+            margin-bottom: 0.7rem !important;
+        }
+        .grid {
+            gap: 0.7rem !important;
+        }
+        .tab-content .card {
+            margin-bottom: 0.7rem !important;
+        }
+        .tab-content {
+            padding: 0.5rem !important;
+        }
+        .tab-button, .filter-btn {
+            font-size: 0.92rem !important;
+            padding: 0.4rem 0.8rem !important;
+        }
+        .font-playfair {
+            font-size: 1.1rem !important;
+        }
+        .card p, .card h2, .card h3, .card h1, .tab-content p, .tab-content h2, .tab-content h3, .tab-content h1 {
+            font-size: 0.92rem !important;
+        }
+        table th, table td {
+            padding-top: 0.2rem !important;
+            padding-bottom: 0.2rem !important;
+            font-size: 0.9rem !important;
+        }
+        .persona-row {
+            height: 1.5rem !important;
+        }
+        #invitados-list > div {
+            padding: 0.5rem 0.5rem !important;
+            font-size: 0.92rem !important;
+        }
+        @media (min-width: 1024px) {
+            .grid-cols-2 {
+                grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+            }
+            .grid-cols-4 {
+                grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
+            }
         }
         .card, .tab-content, .modal .bg-white {
             padding: 1rem !important;
@@ -140,7 +184,7 @@
         </div>
     </header>
 
-    <main class="main-panel px-2 py-4">
+    <main class="main-panel px-2 py-4 w-full">
         <div class="flex gap-2 mb-8 overflow-x-auto pb-2">
             <button onclick="showTab('dashboard')" id="tab-dashboard" class="tab-button active px-6 py-3 rounded-full font-medium whitespace-nowrap transition-all bg-grey-cotton">
                 📊 Dashboard
