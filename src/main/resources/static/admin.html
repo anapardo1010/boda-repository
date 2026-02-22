@@ -14,11 +14,50 @@
             --evergreen: #2D3A2F;
             --ebony: #111111;
             --white-bone: #F9FAFB;
+            --admin-max-width: 600px;
         }
         body {
             font-family: 'Montserrat', sans-serif;
             background-color: var(--white-bone);
             color: var(--evergreen);
+        }
+        main, .main-panel {
+            max-width: var(--admin-max-width) !important;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .card, .tab-content, .modal .bg-white {
+            padding: 1rem !important;
+        }
+        .tab-button, .filter-btn, .bg-seedling, .bg-evergreen, .bg-grey-cotton {
+            font-size: 0.95rem !important;
+            padding-top: 0.5rem !important;
+            padding-bottom: 0.5rem !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+        }
+        .font-playfair {
+            font-size: 1.2rem !important;
+        }
+        .card p, .card h2, .card h3, .card h1, .tab-content p, .tab-content h2, .tab-content h3, .tab-content h1 {
+            font-size: 0.95rem !important;
+        }
+        table th, table td {
+            padding-top: 0.3rem !important;
+            padding-bottom: 0.3rem !important;
+            font-size: 0.92rem !important;
+        }
+        .persona-row {
+            height: 1.8rem !important;
+        }
+        #invitados-list > div {
+            padding: 0.7rem 0.7rem !important;
+            font-size: 0.95rem !important;
+        }
+        @media (max-width: 700px) {
+            :root {
+                --admin-max-width: 98vw;
+            }
         }
         .font-playfair { font-family: 'Playfair Display', serif; }
         .text-ebony { color: var(--ebony); }
@@ -101,7 +140,7 @@
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+    <main class="main-panel px-2 py-4">
         <div class="flex gap-2 mb-8 overflow-x-auto pb-2">
             <button onclick="showTab('dashboard')" id="tab-dashboard" class="tab-button active px-6 py-3 rounded-full font-medium whitespace-nowrap transition-all bg-grey-cotton">
                 📊 Dashboard
