@@ -23,4 +23,4 @@ EXPOSE 8080
 # Mejor tuning para 512MB (más seguro que Xms alto)
 ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 -XX:+UseSerialGC -XX:ActiveProcessorCount=1"
 
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dserver.port=${PORT:-8080} -jar app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dserver.address=0.0.0.0 -Dserver.port=${PORT:-8080} -jar app.jar"]
