@@ -344,6 +344,43 @@
         input:checked + .toggle-slider:before {
             transform: translateX(24px);
         }
+        /* Animación instructiva para confirmar */
+        .instruccion-anim {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            animation: fadeInUp 400ms ease both;
+        }
+        .fake-toggle { width: 56px; height: 30px; display: inline-flex; align-items: center; }
+        .fake-track {
+            width: 50px;
+            height: 26px;
+            background: var(--grey-cotton);
+            border-radius: 9999px;
+            position: relative;
+            padding: 3px;
+        }
+        .fake-knob {
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            position: absolute;
+            left: 3px;
+            top: 3px;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+            animation: knob-sway 1.4s ease-in-out infinite;
+        }
+        @keyframes knob-sway {
+            0% { transform: translateX(0); }
+            50% { transform: translateX(24px); }
+            100% { transform: translateX(0); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .fake-knob { animation: none; }
+        }
         
         /* Card styles for personas */
         .persona-card {
@@ -584,6 +621,15 @@
                 <button onclick="showModal()" id="confirm-button" class="bg-seedling text-white px-10 py-4 rounded-full font-medium tracking-wide hover:bg-evergreen transition-all duration-300">
                     Confirmar Asistencia
                 </button>
+                <div id="instruccion-anim" class="instruccion-anim" role="region" aria-live="polite" aria-label="Instrucción Confirmar Asistencia">
+                    <div class="text-sm text-evergreen font-medium">Confirma tu asistencia</div>
+                    <div class="fake-toggle" aria-hidden="true">
+                        <div class="fake-track">
+                            <div class="fake-knob"></div>
+                        </div>
+                    </div>
+                    <button id="close-instruccion" class="text-xs text-evergreen opacity-70 hover:opacity-100">Cerrar</button>
+                </div>
             </div>
         </section>
         
@@ -1301,6 +1347,35 @@
             countdownInterval = setInterval(updateCountdown, 1000);
             loadInvitado();
         });
+    </script>
+    <script>
+        (function(){
+            const instruccion = document.getElementById('instruccion-anim');
+            if (!instruccion) return;
+            const closeBtn = document.getElementById('close-instruccion');
+            const confirmBtn = document.getElementById('confirm-button');
+
+            const hideInstruction = () => {
+                instruccion.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
+                instruccion.style.opacity = '0';
+                instruccion.style.transform = 'translateY(6px)';
+                setTimeout(() => { instruccion.style.display = 'none'; }, 350);
+            };
+
+            if (closeBtn) closeBtn.addEventListener('click', hideInstruction);
+            if (confirmBtn) confirmBtn.addEventListener('click', hideInstruction);
+
+            // Si la invitación ya está confirmada se oculta la instrucción
+            const checkConfirmed = () => {
+                if (window.currentInvitado && window.currentInvitado.confirmado) {
+                    instruccion.style.display = 'none';
+                }
+            };
+
+            setTimeout(checkConfirmed, 600);
+            // Auto ocultar después de 8s si no hubo interacción
+            setTimeout(() => { if (instruccion.style.display !== 'none') hideInstruction(); }, 8000);
+        })();
     </script>
 </body>
 </html>
