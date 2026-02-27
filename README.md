@@ -1,5 +1,29 @@
 # 💒 Invitaciones de Boda - Aplicación Web
 
+## 🧩 ¿Cómo funciona el proyecto?
+
+Esta aplicación web permite gestionar las invitaciones de boda de manera digital, facilitando la confirmación de asistencia y la interacción con los invitados. El flujo general es:
+
+1. **Acceso personalizado:** Cada familia recibe un enlace único con un identificador (`slug`). Al acceder, se muestra la invitación personalizada y el número de pases disponibles.
+2. **Confirmación de asistencia:** Los invitados pueden confirmar cuántos pases usarán y dejar un mensaje especial para los anfitriones.
+3. **Visualización de datos:** Los datos de confirmación se almacenan y pueden ser consultados por los organizadores desde el backend.
+4. **Cuenta regresiva y ubicación:** La página muestra una cuenta regresiva al evento y un mapa con la ubicación.
+
+### Flujo de usuario
+
+1. El invitado accede a la URL con su `slug` (por ejemplo, `http://localhost:8080/?id=familia-perez`).
+2. La aplicación carga los datos de la familia y muestra la invitación personalizada.
+3. El invitado confirma su asistencia y envía el formulario.
+4. El backend registra la confirmación y muestra un mensaje de agradecimiento.
+
+### Flujo técnico
+
+- El frontend está en `src/main/resources/static/index.html` y utiliza HTML5, Tailwind CSS y JavaScript vanilla.
+- El backend está construido con Java 17 y Spring Boot, expone endpoints REST para consultar y confirmar invitados.
+- La base de datos H2 almacena los datos temporalmente en memoria.
+
+Puedes probar el flujo usando los slugs de ejemplo y los endpoints descritos abajo.
+
 Una aplicación web elegante para gestionar invitaciones de bodas con confirmación en línea.
 
 ## 🚀 Características
