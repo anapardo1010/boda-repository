@@ -346,12 +346,12 @@
         }
         /* Animación instructiva para confirmar */
         .instruccion-anim {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 0.75rem;
-            margin-top: 1rem;
-            animation: fadeInUp 400ms ease both;
+            gap: 0.5rem;
+            margin-left: 0.75rem;
+            animation: none; /* animation handled by knob/track */
         }
         .fake-toggle { width: 56px; height: 30px; display: inline-flex; align-items: center; }
         .fake-track {
@@ -365,21 +365,46 @@
         .fake-knob {
             width: 20px;
             height: 20px;
-            background: white;
+            background: #fff;
             border-radius: 50%;
             position: absolute;
             left: 3px;
             top: 3px;
             box-shadow: 0 3px 8px rgba(0,0,0,0.12);
-            animation: knob-sway 1.4s ease-in-out infinite;
+            border: 1px solid rgba(0,0,0,0.06);
+            animation: knob-sway 3s linear infinite;
         }
+        .fake-track {
+            width: 50px;
+            height: 26px;
+            background: var(--grey-cotton);
+            border-radius: 9999px;
+            position: relative;
+            padding: 3px;
+            animation: track-sway 3s linear infinite;
+        }
+
+        /* Timeline: quick move right, stay 2s, quick move left, stay 1s (total 3s) */
         @keyframes knob-sway {
-            0% { transform: translateX(0); }
-            50% { transform: translateX(24px); }
-            100% { transform: translateX(0); }
+            0% { transform: translateX(0); background: #fff; box-shadow: 0 3px 8px rgba(0,0,0,0.12); border-color: rgba(0,0,0,0.06); }
+            /* quick move to right */
+            6% { transform: translateX(24px); background: #fff; border-color: rgba(130,144,126,0.95); box-shadow: 0 8px 22px rgba(130,144,126,0.18); }
+            /* stay right ~2s */
+            66% { transform: translateX(24px); background: #fff; border-color: rgba(130,144,126,0.95); box-shadow: 0 8px 22px rgba(130,144,126,0.18); }
+            /* quick move to left */
+            72% { transform: translateX(0); background: #fff; border-color: rgba(0,0,0,0.06); box-shadow: 0 3px 8px rgba(0,0,0,0.12); }
+            100% { transform: translateX(0); background: #fff; border-color: rgba(0,0,0,0.06); box-shadow: 0 3px 8px rgba(0,0,0,0.12); }
+        }
+
+        @keyframes track-sway {
+            0% { background: rgba(255,255,255,0.12); }
+            6% { background: rgba(255,255,255,0.18); }
+            66% { background: rgba(255,255,255,0.22); }
+            72% { background: rgba(255,255,255,0.18); }
+            100% { background: rgba(255,255,255,0.12); }
         }
         @media (prefers-reduced-motion: reduce) {
-            .fake-knob { animation: none; }
+            .fake-knob, .fake-track { animation: none; }
         }
         
         /* Card styles for personas */
@@ -618,18 +643,16 @@
                     <p class="text-sm opacity-90" id="confirmed-details"></p>
                 </div>
                 
-                <button onclick="showModal()" id="confirm-button" class="bg-seedling text-white px-10 py-4 rounded-full font-medium tracking-wide hover:bg-evergreen transition-all duration-300">
-                    Confirmar Asistencia
+                <button onclick="showModal()" id="confirm-button" class="bg-seedling text-white px-10 py-4 rounded-full font-medium tracking-wide hover:bg-evergreen transition-all duration-300 inline-flex items-center">
+                    <span class="button-label">Confirmar Asistencia</span>
+                    <span id="instruccion-anim" class="instruccion-anim" role="region" aria-live="polite" aria-label="Instrucción Confirmar Asistencia">
+                        <span class="fake-toggle" aria-hidden="true">
+                            <span class="fake-track">
+                                <span class="fake-knob"></span>
+                            </span>
+                        </span>
+                    </span>
                 </button>
-                <div id="instruccion-anim" class="instruccion-anim" role="region" aria-live="polite" aria-label="Instrucción Confirmar Asistencia">
-                    <div class="text-sm text-evergreen font-medium">Confirma tu asistencia</div>
-                    <div class="fake-toggle" aria-hidden="true">
-                        <div class="fake-track">
-                            <div class="fake-knob"></div>
-                        </div>
-                    </div>
-                    <button id="close-instruccion" class="text-xs text-evergreen opacity-70 hover:opacity-100">Cerrar</button>
-                </div>
             </div>
         </section>
         
@@ -832,8 +855,9 @@
                     <!-- Estacionamiento -->
                     <div class="info-card" data-aos="fade-left" data-animate-right data-delay="2">
                         <div class="flex items-start gap-4 mb-4">
-                            <svg class="w-12 h-12 text-seedling flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="w-12 h-12 text-seedling flex-shrink-0" viewBox="0 0 24 24" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1.25" />
+                                <text x="12" y="12" text-anchor="middle" dominant-baseline="central" font-family="Montserrat, Arial, sans-serif" font-weight="600" font-size="9.5" fill="currentColor">P</text>
                             </svg>
                             <div>
                                 <h3 class="font-playfair text-2xl text-ebony mb-2">Estacionamiento</h3>
@@ -1352,29 +1376,30 @@
         (function(){
             const instruccion = document.getElementById('instruccion-anim');
             if (!instruccion) return;
-            const closeBtn = document.getElementById('close-instruccion');
             const confirmBtn = document.getElementById('confirm-button');
 
-            const hideInstruction = () => {
-                instruccion.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-                instruccion.style.opacity = '0';
-                instruccion.style.transform = 'translateY(6px)';
-                setTimeout(() => { instruccion.style.display = 'none'; }, 350);
-            };
-
-            if (closeBtn) closeBtn.addEventListener('click', hideInstruction);
-            if (confirmBtn) confirmBtn.addEventListener('click', hideInstruction);
-
-            // Si la invitación ya está confirmada se oculta la instrucción
-            const checkConfirmed = () => {
-                if (window.currentInvitado && window.currentInvitado.confirmado) {
-                    instruccion.style.display = 'none';
+            const updateVisibility = () => {
+                if (!confirmBtn) return;
+                const labelEl = confirmBtn.querySelector('.button-label');
+                const text = labelEl ? (labelEl.textContent || '').trim() : (confirmBtn.textContent || '').trim();
+                const visible = text === 'Confirmar Asistencia' && confirmBtn.style.display !== 'none';
+                instruccion.style.display = visible ? 'inline-flex' : 'none';
+                if (visible) {
+                    instruccion.style.opacity = '1';
+                    instruccion.style.transform = 'none';
                 }
             };
 
-            setTimeout(checkConfirmed, 600);
-            // Auto ocultar después de 8s si no hubo interacción
-            setTimeout(() => { if (instruccion.style.display !== 'none') hideInstruction(); }, 8000);
+            // Observe text/content/style changes on the confirm button
+            if (confirmBtn) {
+                const mo = new MutationObserver(updateVisibility);
+                mo.observe(confirmBtn, { childList: true, characterData: true, subtree: true, attributes: true });
+                // Also update on clicks (in case handler changes text after click)
+                confirmBtn.addEventListener('click', () => setTimeout(updateVisibility, 50));
+            }
+
+            // Initial check
+            updateVisibility();
         })();
     </script>
 </body>
