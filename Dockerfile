@@ -29,8 +29,14 @@ WORKDIR /app
 # Copiar el JAR desde la etapa de build
 COPY --from=build /app/target/demo-0.0.1-SNAPSHOT.jar app.jar
 
-# Exponer puerto
+# Exponer puerto por defecto
 EXPOSE 8080
 
-# Comando para ejecutar
-ENTRYPOINT ["java", "-Dserver.port=${PORT}", "-jar", "app.jar"]
+# Opciones de JVM recomendadas para instancias con ~512MB
+ENV JAVA_OPTS="-Xms384m -Xmx384m -XX:+UseSerialGC -XX:ActiveProcessorCount=1"
+
+# Puerto por defecto (puede sobrescribirse con -e PORT=...)
+ENV PORT=8080
+
+# Ejecutar el JAR usando shell para expandir variables
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dserver.port=${PORT} -jar app.jar"]
