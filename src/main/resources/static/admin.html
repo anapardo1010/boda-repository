@@ -660,8 +660,8 @@
             const link=`${APP_URL}/?id=${slug}`;
             const esSingular = pasesTotales === 1;
             const mensaje = esSingular
-                ? `🌿 ${nombreFamilia}, te hacemos llegar nuestra invitación digital para que nos acompañes en la celebración de nuestra unión el próximo 27 de junio de 2026:\n\n🔗 ${link}\n\nDentro podrás consultar el itinerario, la ubicación y confirmar tu asistencia. Te esperamos con mucho cariño.`
-                : `🌿 ${nombreFamilia}, les hacemos llegar nuestra invitación digital para que nos acompañen en la celebración de nuestra unión el próximo 27 de junio de 2026:\n\n🔗 ${link}\n\nDentro podrán consultar el itinerario, la ubicación y confirmar el número de pases que utilizarán. Los esperamos con mucho cariño.`;
+                ? `Hola ${nombreFamilia} 🌿\n\nCon mucho cariño e ilusión, te hacemos llegar nuestra invitación digital para invitarte a la celebración de nuestra boda el próximo 27 de junio de 2026. 🌿\n\n✨ Invitación — ${nombreFamilia}:\n${link}\n\nDentro podrás consultar el itinerario, la ubicación y confirmar tu asistencia. ¡Te esperamos con el corazón!\n\nAna Gabriela & Luis Manuel 💍`
+                : `Hola ${nombreFamilia} 🌿\n\nCon mucho cariño e ilusión, les hacemos llegar nuestra invitación digital para invitarlos a la celebración de nuestra boda el próximo 27 de junio de 2026. 🌿\n\n✨ Invitación — ${nombreFamilia}:\n${link}\n\nDentro podrán consultar el itinerario, la ubicación y confirmar el número de invitados que asistirán. ¡Los esperamos con el corazón!\n\nAna Gabriela & Luis Manuel 💍`;
             const whatsappUrl=`https://wa.me/${telefono.replace(/\D/g,'')}?text=${encodeURIComponent(mensaje)}`;
             window.open(whatsappUrl,'_blank');
         }
@@ -670,8 +670,8 @@
             const link=`${APP_URL}/?id=${slug}`;
             const esSingular = pasesTotales === 1;
             const mensaje = esSingular
-                ? `${nombreFamilia}, 🌿\n\nFaltan solo unas semanas para nuestra boda y queremos confirmar nuevamente tu asistencia.\n\nActualmente tienes confirmado ${pasesConfirmados} pase. Si necesitas modificarlo, puedes hacerlo en:\n\n🔗 ${link}\n\n¡Te esperamos con mucha ilusión el 27 de junio!`
-                : `${nombreFamilia}, 🌿\n\nFaltan solo unas semanas para nuestra boda y queremos confirmar nuevamente su asistencia.\n\nActualmente tienen confirmados ${pasesConfirmados} pases. Si necesitan modificar el número de invitados, pueden hacerlo en:\n\n🔗 ${link}\n\n¡Los esperamos con mucha ilusión el 27 de junio!`;
+                ? `Hola ${nombreFamilia} 🌿\n\n¡Ya falta muy poco para nuestra boda y estamos muy emocionados! 🌿\n\nQueremos recordarte que tienes confirmado ${pasesConfirmados} pase. Si necesitas realizar algún cambio, puedes hacerlo desde tu invitación:\n\n✨ Tu Invitación — ${nombreFamilia}:\n${link}\n\n¡Te esperamos con mucha ilusión el 27 de junio!\n\nAna Gabriela & Luis Manuel 💍`
+                : `Hola ${nombreFamilia} 🌿\n\n¡Ya falta muy poco para nuestra boda y estamos muy emocionados! 🌿\n\nQueremos recordarles que tienen confirmados ${pasesConfirmados} pases. Si necesitan realizar algún cambio, pueden hacerlo desde su invitación:\n\n✨ Su Invitación — ${nombreFamilia}:\n${link}\n\n¡Los esperamos con mucha ilusión el 27 de junio!\n\nAna Gabriela & Luis Manuel 💍`;
             const whatsappUrl=`https://wa.me/${telefono.replace(/\D/g,'')}?text=${encodeURIComponent(mensaje)}`;
             window.open(whatsappUrl,'_blank');
         }

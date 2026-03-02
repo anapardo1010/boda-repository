@@ -197,6 +197,7 @@ public class MesaController {
      * Exporta la distribución de mesas
      */
     @GetMapping("/exportar")
+    @Transactional(readOnly = true)
     public ResponseEntity<Map<String, Object>> exportarDistribucion() {
         List<Mesa> mesas = mesaRepository.findAllByOrderByOrdenAsc();
         

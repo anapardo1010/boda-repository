@@ -1,5 +1,6 @@
 package com.example.demo.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,6 +26,7 @@ public class Mesa {
     private int orden = 0;
     
     @OneToMany(mappedBy = "mesa")
+    @JsonIgnore  // Evita lazy loading fuera de sesión y referencia circular
     private List<InvitadoPersona> personas = new ArrayList<>();
     
     // Constructores
