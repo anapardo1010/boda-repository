@@ -20,7 +20,8 @@ COPY --from=build /app/target/*.jar app.jar
 
 EXPOSE 8080
 
-# Mejor tuning para 512MB (más seguro que Xms alto)
-ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 -XX:+UseSerialGC -XX:ActiveProcessorCount=1"
+# Tuning para 512MB + arranque rápido
+# -XX:TieredStopAtLevel=1 omite la compilación JIT en el arranque (~1-2s menos)
+ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 -XX:+UseSerialGC -XX:ActiveProcessorCount=1 -XX:TieredStopAtLevel=1"
 
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Dserver.address=0.0.0.0 -Dserver.port=${PORT:-8080} -jar app.jar"]
