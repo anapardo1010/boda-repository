@@ -36,7 +36,7 @@ public class Invitado {
     @Column(length = 20)
     private String telefono = "";
     
-    @OneToMany(mappedBy = "invitado", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "invitado", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @OrderBy("orden ASC")
     private List<InvitadoPersona> personas = new ArrayList<>();
     
