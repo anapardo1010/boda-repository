@@ -1,6 +1,7 @@
 package com.example.demo.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
@@ -32,7 +33,7 @@ public class InvitadoPersona {
     private Boolean activo = true;  // Soft delete - false para ocultar sin eliminar de DB
     
     @ManyToOne
-    @JsonIgnore  // Evita la serialización del invitado para prevenir referencia circular
+    @JsonIgnoreProperties("personas")  // Serializa la mesa (id, nombre, forma, capacidad) sin su lista de personas
     @JoinColumn(name = "mesa_id")
     private Mesa mesa;
     
