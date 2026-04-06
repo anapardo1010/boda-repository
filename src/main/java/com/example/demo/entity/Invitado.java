@@ -30,7 +30,7 @@ public class Invitado {
     @Column(nullable = false)
     private boolean confirmacionBloqueada = false;
     
-    @Column(length = 500)
+    @Column(length = 2000)
     private String mensaje = "";
     
     @Column(length = 20)
