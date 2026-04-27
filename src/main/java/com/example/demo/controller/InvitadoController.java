@@ -64,13 +64,28 @@ public class InvitadoController {
             invitado.setMensaje(request.getMensaje() != null ? request.getMensaje() : "");
             
             // 1. INVITADOS PRINCIPALES (esAdicional=false)
-            // Solo actualizar confirmado - NUNCA eliminar ni desactivar
+            // Solo actualizar confirmado y rechazado - NUNCA eliminar ni desactivar
             if (request.getPersonasEspecificas() != null) {
                 for (ConfirmacionRequest.PersonaConfirmacion pc : request.getPersonasEspecificas()) {
                     invitado.getPersonas().stream()
                         .filter(p -> p.getId() != null && p.getId().equals(pc.getPersonaId()) && p.getActivo())
                         .findFirst()
-                        .ifPresent(persona -> persona.setConfirmado(pc.isConfirmado()));
+                        .ifPresent(persona -> {
+                            boolean confirmado = pc.isConfirmado();
+                            boolean rechazado = pc.isRechazado();
+                            
+                            // Asegurar la exclusión mutua: no pueden ser ambos true
+                            if (confirmado && rechazado) {
+                                rechazado = false; // Confirmado tiene prioridad o como se desee
+                            }
+                            // Si se confirma, aseguramos que el rechazado sea falso (reduntante pero seguro)
+                            if (confirmado) rechazado = false;
+                            // Si se rechaza, aseguramos que el confirmado sea falso
+                            if (rechazado) confirmado = false;
+
+                            persona.setConfirmado(confirmado);
+                            persona.setRechazado(rechazado);
+                        });
                 }
             }
             
@@ -109,7 +124,17 @@ public class InvitadoController {
                 for (ConfirmacionRequest.PersonaAdicional pa : request.getNombresAdicionales()) {
                     String nombre = pa.getNombre();
                     
-                    if (nombre != null && !nombre.trim().isEmpty()) {
+                    if (pa.isRechazado() && pa.getPersonaId() != null) {
+                        // RECHAZADO: marcar como rechazado sin eliminar
+                        invitado.getPersonas().stream()
+                            .filter(p -> p.getId() != null && p.getId().equals(pa.getPersonaId()))
+                            .findFirst()
+                            .ifPresent(persona -> {
+                                persona.setConfirmado(false);
+                                persona.setRechazado(true);
+                                persona.setActivo(true); // Lo dejamos activo para poder volver a confirmar
+                            });
+                    } else if (nombre != null && !nombre.trim().isEmpty()) {
                         if (pa.getPersonaId() != null) {
                             // ACTUALIZAR persona existente (preservar datos)
                             invitado.getPersonas().stream()
@@ -118,6 +143,7 @@ public class InvitadoController {
                                 .ifPresent(persona -> {
                                     persona.setNombreCompleto(nombre.trim());
                                     persona.setConfirmado(true);
+                                    persona.setRechazado(false);
                                     persona.setActivo(true);  // Reactivar si estaba inactivo
                                 });
                         } else {
@@ -125,6 +151,7 @@ public class InvitadoController {
                             InvitadoPersona persona = new InvitadoPersona(invitado, nombre.trim(), ordenCounter++);
                             persona.setEsAdicional(true);
                             persona.setConfirmado(true);
+                            persona.setRechazado(false);
                             persona.setActivo(true);
                             invitado.getPersonas().add(persona);
                         }

@@ -461,6 +461,31 @@
             border-radius: 1rem;
             text-align: center;
         }
+
+        /* === Toast de éxito === */
+        #success-toast {
+            position: fixed;
+            bottom: 2rem;
+            left: 50%;
+            transform: translateX(-50%) translateY(120%);
+            background: linear-gradient(135deg, var(--seedling), var(--evergreen));
+            color: white;
+            padding: 1rem 2rem;
+            border-radius: 9999px;
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            box-shadow: 0 8px 32px rgba(45,58,47,0.25);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        #success-toast.show {
+            transform: translateX(-50%) translateY(0);
+        }
     </style>
     <script>
         // Sistema de transiciones minimalistas con Intersection Observer
@@ -544,6 +569,14 @@
             <div class="spinner mx-auto"></div>
             <p id="loading-text" class="text-evergreen mt-4 text-sm tracking-wide">Cargando invitación...</p>
         </div>
+    </div>
+
+    <!-- Toast de éxito -->
+    <div id="success-toast">
+        <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+        </svg>
+        ¡Respuestas guardadas correctamente!
     </div>
     
     <div id="error-content" class="hidden" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; align-items: center; justify-content: center;" >
@@ -643,16 +676,71 @@
                     <p class="text-sm opacity-90" id="confirmed-details"></p>
                 </div>
                 
-                <button onclick="showModal()" id="confirm-button" class="bg-seedling text-white px-10 py-4 rounded-full font-medium tracking-wide hover:bg-evergreen transition-all duration-300 inline-flex items-center">
-                    <span class="button-label">Confirmar Asistencia</span>
-                    <span id="instruccion-anim" class="instruccion-anim" role="region" aria-live="polite" aria-label="Instrucción Confirmar Asistencia">
-                        <span class="fake-toggle" aria-hidden="true">
-                            <span class="fake-track">
-                                <span class="fake-knob"></span>
-                            </span>
-                        </span>
-                    </span>
-                </button>
+                <!-- Inline Confirmation Form -->
+                <div id="form-container" class="bg-white rounded-2xl max-w-lg w-full mx-auto p-8 shadow-xl mt-8 mb-8 relative hidden" data-aos="fade-up">
+                    <div id="form-loading" class="absolute top-0 left-0 right-0 bottom-0 bg-white bg-opacity-95 hidden items-center justify-center z-10 rounded-2xl">
+                        <div class="text-center">
+                            <div class="spinner mx-auto mb-4"></div>
+                            <p class="font-playfair text-xl text-evergreen">Confirmando asistencia...</p>
+                        </div>
+                    </div>
+                    
+                    <div id="form-content" class="form-content text-left">
+                        <h3 class="font-playfair text-3xl text-ebony mb-2 text-center">Confirmar Asistencia</h3>
+                        <p class="text-sm text-evergreen opacity-70 text-center mb-6">Por favor indica si nos acompañarás por cada invitado</p>
+                        
+                        <form id="confirmation-form" class="space-y-6">
+                            <!-- Resumen de confirmación -->
+                            <div class="bg-grey-cotton rounded-xl p-4 text-center">
+                                <p class="text-sm text-evergreen mb-1">Confirmando</p>
+                                <p class="font-playfair text-3xl text-seedling">
+                                    <span id="count-confirmados">0</span> de <span id="count-total">0</span>
+                                </p>
+                                <p class="text-xs text-evergreen opacity-70 mt-1">lugares disponibles</p>
+                            </div>
+                            
+                            <!-- Invitados específicos -->
+                            <div id="invitados-especificos-container" class="hidden">
+                                <h4 class="font-medium text-evergreen mb-3 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-seedling" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                    </svg>
+                                    Invitados
+                                </h4>
+                                <div id="invitados-especificos-list" class="space-y-3"></div>
+                            </div>
+                            
+                            <!-- Pases adicionales -->
+                            <div id="pases-adicionales-container" class="hidden">
+                                <h4 class="font-medium text-evergreen mb-3 flex items-center gap-2">
+                                    <svg class="w-5 h-5 text-seedling" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                                    </svg>
+                                    Pases Adicionales
+                                    <span class="text-xs opacity-70">(opcional)</span>
+                                </h4>
+                                <p class="text-xs text-evergreen opacity-70 mb-3">Si utilizarás estos pases, selecciona "Asistiré" e ingresa el nombre de tu acompañante. Si no los utilizarás, selecciona "No asistiré".</p>
+                                <div id="pases-adicionales-list" class="space-y-3"></div>
+                            </div>
+                            
+                            <!-- Mensaje -->
+                            <div>
+                                <label for="mensaje" class="block text-sm font-medium text-evergreen mb-2">Mensaje especial (opcional)</label>
+                                <textarea id="mensaje" name="mensaje" rows="3" placeholder="Escribe un deseo para los novios..."
+                                          class="w-full px-4 py-3 border border-grey-cotton rounded-lg focus:ring-2 focus:ring-seedling focus:border-transparent resize-none text-sm"></textarea>
+                            </div>
+                            
+                            <!-- Botones -->
+                            <div class="pt-2">
+                                <button type="submit" id="submit-btn"
+                                        class="w-full bg-seedling text-white px-6 py-4 rounded-full font-medium hover:bg-evergreen transition-all shadow-md">
+                                    Enviar Confirmación
+                                </button>
+                            </div>
+                            <div id="error-message" class="hidden text-center text-red-600 text-sm"></div>
+                        </form>
+                    </div>
+                </div>
             </div>
         </section>
         
@@ -891,76 +979,7 @@
         </footer>
     </div>
     
-    <div id="modal-confirmacion" class="modal">
-        <div class="bg-white rounded-2xl max-w-lg w-full mx-4 p-8 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-            <div id="modal-loading" class="modal-overlay">
-                <div class="text-center">
-                    <div class="spinner mx-auto mb-4"></div>
-                    <p class="font-playfair text-xl text-evergreen">Confirmando asistencia...</p>
-                </div>
-            </div>
-            <div id="form-content" class="form-content">
-                <h3 class="font-playfair text-3xl text-ebony mb-2 text-center">Confirmar Asistencia</h3>
-                <p class="text-sm text-evergreen opacity-70 text-center mb-6">Por favor confirma o declina por cada invitado</p>
-                
-                <form id="confirmation-form" class="space-y-6">
-                    <!-- Resumen de confirmación -->
-                    <div class="bg-grey-cotton rounded-xl p-4 text-center">
-                        <p class="text-sm text-evergreen mb-1">Confirmando</p>
-                        <p class="font-playfair text-3xl text-seedling">
-                            <span id="count-confirmados">0</span> de <span id="count-total">0</span>
-                        </p>
-                        <p class="text-xs text-evergreen opacity-70 mt-1">lugares disponibles</p>
-                    </div>
-                    
-                    <!-- Invitados específicos -->
-                    <div id="invitados-especificos-container" class="hidden">
-                        <h4 class="font-medium text-evergreen mb-3 flex items-center gap-2">
-                            <svg class="w-5 h-5 text-seedling" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-                            </svg>
-                            Invitados
-                        </h4>
-                        <div id="invitados-especificos-list" class="space-y-2"></div>
-                    </div>
-                    
-                    <!-- Pases adicionales -->
-                    <div id="pases-adicionales-container" class="hidden">
-                        <h4 class="font-medium text-evergreen mb-3 flex items-center gap-2">
-                            <svg class="w-5 h-5 text-seedling" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
-                            </svg>
-                            Pases Adicionales
-                            <span class="text-xs opacity-70">(opcional)</span>
-                        </h4>
-                        <p class="text-xs text-evergreen opacity-70 mb-3">Puedes agregar nombres para tus pases adicionales o dejarlos sin usar</p>
-                        <div id="pases-adicionales-list" class="space-y-2"></div>
-                    </div>
-                    
-                    <!-- Mensaje -->
-                    <div>
-                        <label for="mensaje" class="block text-sm font-medium text-evergreen mb-2">Mensaje especial (opcional)</label>
-                        <textarea id="mensaje" name="mensaje" rows="3" placeholder="Escribe un deseo para los novios..."
-                                  class="w-full px-4 py-3 border border-grey-cotton rounded-lg focus:ring-2 focus:ring-seedling focus:border-transparent resize-none text-sm"></textarea>
-                    </div>
-                    
-                    <!-- Botones -->
-                    <div class="flex gap-3">
-                        <button type="submit" id="submit-btn"
-                                class="flex-1 bg-seedling text-white px-6 py-3 rounded-full font-medium hover:bg-evergreen transition-all">Confirmar</button>
-                        <button type="button" onclick="closeModal()" 
-                                class="flex-1 bg-grey-cotton text-evergreen px-6 py-3 rounded-full font-medium hover:bg-evergreen hover:text-white transition-all">Cancelar</button>
-                    </div>
-                    <div id="error-message" class="hidden text-center text-red-600 text-sm"></div>
-                </form>
-            </div>
-        </div>
-    </div>
-    
-    <button id="sticky-confirm-btn" onclick="showModal()" 
-            class="sticky-btn hidden bg-seedling text-white px-6 py-3 rounded-full font-medium shadow-lg">
-        Confirmar Asistencia
-    </button>
+
     
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
@@ -1080,14 +1099,14 @@
             // Check if already confirmed
             if (currentInvitado.confirmado) {
                 document.getElementById('already-confirmed').classList.remove('hidden');
-                document.getElementById('confirmed-details').textContent = `${currentInvitado.pasesConfirmados} persona${currentInvitado.pasesConfirmados > 1 ? 's' : ''} confirmada${currentInvitado.pasesConfirmados > 1 ? 's' : ''}`;
-                document.getElementById('confirm-button').textContent = 'Actualizar Confirmación';
+                const conf = currentInvitado.pasesConfirmados;
+                document.getElementById('confirmed-details').textContent = `${conf} persona${conf !== 1 ? 's' : ''} confirmada${conf !== 1 ? 's' : ''}. Puedes actualizar tu respuesta abajo.`;
                 document.getElementById('mensaje').value = currentInvitado.mensaje || '';
             }
             
             // Si la confirmación está bloqueada
             if (currentInvitado.confirmacionBloqueada) {
-                document.getElementById('confirm-button').style.display = 'none';
+                // Ocultar también el banner verde, se sustituye por mensaje personalizado
                 document.getElementById('already-confirmed').style.display = 'none';
                 
                 // Caso 1: Hubo confirmación - Mostrar lista de personas confirmadas
@@ -1135,6 +1154,9 @@
                     const confirmedDiv = document.getElementById('already-confirmed');
                     confirmedDiv.parentNode.insertBefore(section, confirmedDiv);
                 }
+            } else {
+                // Si la confirmación no está bloqueada, mostramos el formulario
+                showForm();
             }
         }
         
@@ -1153,65 +1175,71 @@
             console.warn('Error en invitación:', msg || 'desconocido');
         }
         
-        function showModal() {
+        function showForm() {
             // Cargar mensaje existente si ya confirmó
             if (currentInvitado.confirmado && currentInvitado.mensaje) {
                 document.getElementById('mensaje').value = currentInvitado.mensaje;
             }
             
-            // Construir el modal con invitados específicos y pases adicionales
-            buildModalContent();
+            buildFormContent();
             
-            document.getElementById('modal-confirmacion').classList.add('active');
+            document.getElementById('form-container').classList.remove('hidden');
         }
         
-        function buildModalContent() {
-            // FILTRAR: Solo personas ACTIVAS
+        function buildFormContent() {
             const personasActivas = currentInvitado.personas ? 
                 currentInvitado.personas.filter(p => p.activo !== false) : [];
             
-            // Separar principales y adicionales (ACTIVOS)
             const personasPreLlenadas = personasActivas.filter(p => !p.esAdicional);
             const personasAdicionalesExistentes = personasActivas.filter(p => p.esAdicional);
             
             const pasesTotales = currentInvitado.pasesTotales;
             const pasesAdicionales = pasesTotales - personasPreLlenadas.length;
             
-            // Actualizar contador total
             document.getElementById('count-total').textContent = pasesTotales;
             
-            // 1. Invitados específicos (pre-llenados) - SOLO ACTIVOS
+            // 1. Invitados específicos (pre-llenados)
             if (personasPreLlenadas.length > 0) {
                 const container = document.getElementById('invitados-especificos-container');
                 const list = document.getElementById('invitados-especificos-list');
                 container.classList.remove('hidden');
                 list.innerHTML = '';
                 
-                personasPreLlenadas.forEach((persona, index) => {
+                personasPreLlenadas.forEach((persona) => {
+                    const status = persona.rechazado ? 'decline' : (persona.confirmado ? 'accept' : 'pending');
+                    const isAccept = status === 'accept';
+                    const isDecline = status === 'decline';
+                    
                     const card = document.createElement('div');
-                    card.className = 'persona-card border border-grey-cotton rounded-lg p-4 transition-all';
+                    card.className = 'border border-grey-cotton rounded-lg p-4 bg-white';
                     card.innerHTML = `
-                        <div class="flex items-center justify-between">
-                            <div class="flex-1">
+                        <div class="flex items-center justify-between mb-3">
+                            <div>
                                 <p class="font-medium text-ebony">${persona.nombreCompleto}</p>
-                                <p class="text-xs text-evergreen opacity-70 mt-1">Invitación personal</p>
+                                <p class="text-xs text-evergreen opacity-70">Invitación personal</p>
                             </div>
-                            <label class="toggle-switch">
-                                <input type="checkbox" 
-                                       class="persona-checkbox" 
-                                       data-persona-id="${persona.id}" 
-                                       data-type="especifico"
-                                       onchange="updateConfirmCount()"
-                                       ${persona.confirmado ? 'checked' : ''}>
-                                <span class="toggle-slider"></span>
-                            </label>
                         </div>
+                        <div class="flex gap-2">
+                            <button type="button" 
+                                    class="flex-1 py-2 text-sm font-medium rounded-lg border transition-all ${isAccept ? 'bg-seedling text-white border-seedling' : 'bg-white text-evergreen border-grey-cotton hover:bg-grey-cotton'}"
+                                    onclick="setGuestStatus(this, ${persona.id}, 'accept')"
+                                    data-btn-type="accept">
+                                Asistiré
+                            </button>
+                            <button type="button" 
+                                    class="flex-1 py-2 text-sm font-medium rounded-lg border transition-all ${isDecline ? 'bg-red-500 text-white border-red-500' : 'bg-white text-evergreen border-grey-cotton hover:bg-grey-cotton'}"
+                                    onclick="setGuestStatus(this, ${persona.id}, 'decline')"
+                                    data-btn-type="decline">
+                                No asistiré
+                            </button>
+                        </div>
+                        <input type="hidden" class="guest-status-input" data-persona-id="${persona.id}" data-type="especifico" value="${status}">
                     `;
                     list.appendChild(card);
                 });
             }
             
-            // 2. Pases adicionales (existentes y disponibles)
+            // 2. Pases adicionales
             if (pasesAdicionales > 0) {
                 const container = document.getElementById('pases-adicionales-container');
                 const list = document.getElementById('pases-adicionales-list');
@@ -1219,114 +1247,198 @@
                 list.innerHTML = '';
                 
                 for (let i = 0; i < pasesAdicionales; i++) {
-                    // Cargar persona adicional ACTIVA existente si existe
                     const personaExistente = personasAdicionalesExistentes[i];
+                    let status = 'pending';
+                    if (personaExistente) {
+                        status = personaExistente.rechazado ? 'decline' : (personaExistente.confirmado ? 'accept' : 'pending');
+                    }
+                    else if (currentInvitado.confirmado) {
+                        // Si ya confirmó y no llenó este pase, asumimos decline
+                        status = 'decline';
+                    }
+                    
+                    const isAccept = status === 'accept';
+                    const isDecline = status === 'decline';
+                    
                     const card = document.createElement('div');
-                    card.className = 'pase-adicional-card border border-grey-cotton rounded-lg p-4';
+                    card.className = 'border border-grey-cotton rounded-lg p-4 bg-white';
                     card.innerHTML = `
-                        <div class="flex items-start gap-3">
-                            <label class="toggle-switch mt-1">
-                                <input type="checkbox" 
-                                       class="pase-adicional-checkbox" 
-                                       data-index="${i}"
-                                       data-type="adicional"
-                                       ${personaExistente ? `data-persona-id="${personaExistente.id}"` : ''}
-                                       onchange="togglePaseAdicional(${i})"
-                                       ${personaExistente ? 'checked' : ''}>
-                                <span class="toggle-slider"></span>
-                            </label>
-                            <div class="flex-1">
-                                <input type="text" 
-                                       id="adicional-nombre-${i}"
-                                       placeholder="Nombre del acompañante (opcional)"
-                                       value="${personaExistente ? personaExistente.nombreCompleto : ''}"
-                                       ${personaExistente ? '' : 'disabled'}
-                                       class="w-full px-3 py-2 border border-grey-cotton rounded-lg text-sm focus:ring-2 focus:ring-seedling focus:border-transparent disabled:bg-grey-cotton disabled:opacity-50">
-                                <p class="text-xs text-evergreen opacity-70 mt-1">Pase adicional ${i + 1}</p>
-                            </div>
+                        <p class="text-xs text-evergreen opacity-70 mb-2 font-medium uppercase tracking-wider">Lugar Adicional ${i + 1}</p>
+                        <div class="flex gap-2 mb-3">
+                            <button type="button" 
+                                    class="flex-1 py-2 text-sm font-medium rounded-lg border transition-all ${isAccept ? 'bg-seedling text-white border-seedling' : 'bg-white text-evergreen border-grey-cotton hover:bg-grey-cotton'}"
+                                    onclick="setPaseStatus(this, ${i}, 'accept')"
+                                    data-btn-type="accept">
+                                Asistiré
+                            </button>
+                            <button type="button" 
+                                    class="flex-1 py-2 text-sm font-medium rounded-lg border transition-all ${isDecline ? 'bg-red-500 text-white border-red-500' : 'bg-white text-evergreen border-grey-cotton hover:bg-grey-cotton'}"
+                                    onclick="setPaseStatus(this, ${i}, 'decline')"
+                                    data-btn-type="decline">
+                                No asistiré
+                            </button>
                         </div>
+                        <div id="adicional-input-container-${i}" class="${isAccept ? 'block' : 'hidden'}">
+                            <input type="text" 
+                                   id="adicional-nombre-${i}"
+                                   placeholder="Nombre completo del acompañante"
+                                   value="${personaExistente ? personaExistente.nombreCompleto : ''}"
+                                   class="w-full px-3 py-2 border border-grey-cotton rounded-lg text-sm focus:ring-2 focus:ring-seedling focus:border-transparent">
+                        </div>
+                        <input type="hidden" class="pase-status-input" data-index="${i}" data-type="adicional" value="${status}">
+                        ${personaExistente ? `<input type="hidden" id="adicional-id-${i}" value="${personaExistente.id}">` : ''}
                     `;
                     list.appendChild(card);
                 }
             }
             
-            // Calcular confirmados iniciales
             updateConfirmCount();
         }
         
-        function togglePaseAdicional(index) {
-            const checkbox = document.querySelector(`[data-index="${index}"][data-type="adicional"]`);
-            const input = document.getElementById(`adicional-nombre-${index}`);
+        function setGuestStatus(btn, personaId, status) {
+            const container = btn.parentElement;
+            const acceptBtn = container.querySelector('[data-btn-type="accept"]');
+            const declineBtn = container.querySelector('[data-btn-type="decline"]');
+            const input = container.parentElement.querySelector('.guest-status-input');
+            const currentStatus = input.value;
             
-            if (checkbox.checked) {
-                input.disabled = false;
-                input.focus();
+            if (currentStatus === status) {
+                // Deselect
+                acceptBtn.className = 'flex-1 py-2 text-sm font-medium rounded-lg border transition-all bg-white text-evergreen border-grey-cotton hover:bg-grey-cotton';
+                declineBtn.className = 'flex-1 py-2 text-sm font-medium rounded-lg border transition-all bg-white text-evergreen border-grey-cotton hover:bg-grey-cotton';
+                input.value = 'pending';
+            } else if (status === 'accept') {
+                acceptBtn.className = 'flex-1 py-2 text-sm font-medium rounded-lg border transition-all bg-seedling text-white border-seedling';
+                declineBtn.className = 'flex-1 py-2 text-sm font-medium rounded-lg border transition-all bg-white text-evergreen border-grey-cotton hover:bg-grey-cotton';
+                input.value = 'accept';
             } else {
-                input.disabled = true;
-                input.value = '';
+                acceptBtn.className = 'flex-1 py-2 text-sm font-medium rounded-lg border transition-all bg-white text-evergreen border-grey-cotton hover:bg-grey-cotton';
+                declineBtn.className = 'flex-1 py-2 text-sm font-medium rounded-lg border transition-all bg-red-500 text-white border-red-500';
+                input.value = 'decline';
+            }
+            
+            updateConfirmCount();
+        }
+        
+        function setPaseStatus(btn, index, status) {
+            const container = btn.parentElement;
+            const acceptBtn = container.querySelector('[data-btn-type="accept"]');
+            const declineBtn = container.querySelector('[data-btn-type="decline"]');
+            const inputNameContainer = document.getElementById(`adicional-input-container-${index}`);
+            const inputStatus = container.parentElement.querySelector('.pase-status-input');
+            const currentStatus = inputStatus.value;
+            
+            if (currentStatus === status) {
+                // Deselect
+                acceptBtn.className = 'flex-1 py-2 text-sm font-medium rounded-lg border transition-all bg-white text-evergreen border-grey-cotton hover:bg-grey-cotton';
+                declineBtn.className = 'flex-1 py-2 text-sm font-medium rounded-lg border transition-all bg-white text-evergreen border-grey-cotton hover:bg-grey-cotton';
+                inputStatus.value = 'pending';
+                inputNameContainer.classList.add('hidden');
+            } else if (status === 'accept') {
+                acceptBtn.className = 'flex-1 py-2 text-sm font-medium rounded-lg border transition-all bg-seedling text-white border-seedling';
+                declineBtn.className = 'flex-1 py-2 text-sm font-medium rounded-lg border transition-all bg-white text-evergreen border-grey-cotton hover:bg-grey-cotton';
+                inputStatus.value = 'accept';
+                inputNameContainer.classList.remove('hidden');
+                setTimeout(() => document.getElementById(`adicional-nombre-${index}`).focus(), 50);
+            } else {
+                acceptBtn.className = 'flex-1 py-2 text-sm font-medium rounded-lg border transition-all bg-white text-evergreen border-grey-cotton hover:bg-grey-cotton';
+                declineBtn.className = 'flex-1 py-2 text-sm font-medium rounded-lg border transition-all bg-red-500 text-white border-red-500';
+                inputStatus.value = 'decline';
+                inputNameContainer.classList.add('hidden');
             }
             
             updateConfirmCount();
         }
         
         function updateConfirmCount() {
-            const especificosChecked = document.querySelectorAll('.persona-checkbox:checked').length;
-            const adicionalesChecked = document.querySelectorAll('.pase-adicional-checkbox:checked').length;
-            const total = especificosChecked + adicionalesChecked;
+            const especificosAcceptados = Array.from(document.querySelectorAll('.guest-status-input')).filter(input => input.value === 'accept').length;
+            const adicionalesAcceptados = Array.from(document.querySelectorAll('.pase-status-input')).filter(input => input.value === 'accept').length;
+            const total = especificosAcceptados + adicionalesAcceptados;
             
             document.getElementById('count-confirmados').textContent = total;
         }
-        
-        function closeModal() {
-            document.getElementById('modal-confirmacion').classList.remove('active');
-            document.getElementById('error-message').classList.add('hidden');
+
+        function showSuccessToast() {
+            const toast = document.getElementById('success-toast');
+            toast.classList.add('show');
+            setTimeout(() => toast.classList.remove('show'), 3500);
         }
+
+        // Expose showForm so we can replace displayInvitado behaviour
+        window.showForm = showForm;
         
         document.getElementById('confirmation-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Verificar si está bloqueada
             if (currentInvitado.confirmacionBloqueada) {
                 document.getElementById('error-message').textContent = 'Las confirmaciones han sido bloqueadas por el administrador.';
                 document.getElementById('error-message').classList.remove('hidden');
                 return;
             }
             
+            // No validamos que todos tengan respuesta, permitimos confirmaciones parciales
+            const inputsEspecificos = Array.from(document.querySelectorAll('.guest-status-input'));
+            const inputsAdicionales = Array.from(document.querySelectorAll('.pase-status-input'));
+            
             const mensaje = document.getElementById('mensaje').value;
             
-            // Recopilar confirmaciones de personas específicas
+            // Recopilar confirmaciones específicas
             const personasEspecificas = [];
-            document.querySelectorAll('.persona-checkbox').forEach(checkbox => {
+            inputsEspecificos.forEach(input => {
                 personasEspecificas.push({
-                    personaId: parseInt(checkbox.dataset.personaId),
-                    confirmado: checkbox.checked
+                    personaId: parseInt(input.dataset.personaId),
+                    confirmado: input.value === 'accept',
+                    rechazado: input.value === 'decline'
                 });
             });
             
-            // Recopilar pases adicionales confirmados
-            const pasesAdicionales = [];
-            document.querySelectorAll('.pase-adicional-checkbox').forEach(checkbox => {
-                if (checkbox.checked) {
-                    const index = checkbox.dataset.index;
-                    const nombreInput = document.getElementById(`adicional-nombre-${index}`);
-                    const nombre = nombreInput.value.trim();
-                    
-                    if (nombre) {
-                        pasesAdicionales.push({
-                            personaId: checkbox.dataset.personaId ? parseInt(checkbox.dataset.personaId) : null,
-                            nombre: nombre
+            // Recopilar pases adicionales
+            const nombresAdicionales = [];
+            let algunNombreFaltante = false;
+            
+            inputsAdicionales.forEach(input => {
+                const index = input.dataset.index;
+                const status = input.value;
+                const idInput = document.getElementById(`adicional-id-${index}`);
+                const personaId = idInput ? parseInt(idInput.value) : null;
+                
+                if (status === 'accept') {
+                    const nombre = document.getElementById(`adicional-nombre-${index}`).value.trim();
+                    if (!nombre) {
+                        algunNombreFaltante = true;
+                    } else {
+                        nombresAdicionales.push({
+                            personaId: personaId,
+                            nombre: nombre,
+                            confirmado: true,
+                            rechazado: false
                         });
                     }
+                } else if (status === 'decline') {
+                    // Si ya existía en BD, mandamos su ID con rechazado=true para que se actualice
+                    if (personaId) {
+                        nombresAdicionales.push({
+                            personaId: personaId,
+                            confirmado: false,
+                            rechazado: true
+                        });
+                    }
+                    // Si declinó un pase que NO existía, no enviamos nada, pues al Backend no le importan los pases vacíos.
                 }
             });
             
-            // Calcular total de confirmados
-            const especificosConfirmados = personasEspecificas.filter(p => p.confirmado).length;
-            const pasesConfirmados = especificosConfirmados + pasesAdicionales.length;
+            if (algunNombreFaltante) {
+                document.getElementById('error-message').textContent = 'Por favor ingresa el nombre de todos tus acompañantes confirmados.';
+                document.getElementById('error-message').classList.remove('hidden');
+                return;
+            }
+            
+            const pasesConfirmados = personasEspecificas.filter(p => p.confirmado).length + 
+                                     nombresAdicionales.filter(p => p.confirmado).length;
             
             // Show loading
-            document.getElementById('modal-loading').classList.add('active');
-            document.getElementById('form-content').classList.add('loading');
+            document.getElementById('form-loading').classList.remove('hidden');
+            document.getElementById('form-loading').classList.add('flex');
             document.getElementById('error-message').classList.add('hidden');
             
             try {
@@ -1338,55 +1450,38 @@
                         pasesConfirmados: pasesConfirmados,
                         mensaje: mensaje,
                         personasEspecificas: personasEspecificas,
-                        nombresAdicionales: pasesAdicionales
+                        nombresAdicionales: nombresAdicionales
                     })
                 });
-                
-                document.getElementById('modal-loading').classList.remove('active');
-                document.getElementById('form-content').classList.remove('loading');
                 
                 if (response.ok) {
                     currentInvitado = await response.json();
                     
-                    // Show success message
-                    document.getElementById('modal-loading').innerHTML = `
-                        <div class="text-center p-8">
-                            <svg class="w-20 h-20 mx-auto mb-4 text-seedling" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                            <p class="font-playfair text-3xl text-ebony mb-2">¡Confirmado!</p>
-                            <p class="text-evergreen">${pasesConfirmados} persona${pasesConfirmados !== 1 ? 's' : ''} confirmada${pasesConfirmados !== 1 ? 's' : ''}</p>
-                        </div>
-                    `;
-                    document.getElementById('modal-loading').classList.add('active');
+                    // Quitar loading overlay
+                    document.getElementById('form-loading').classList.add('hidden');
+                    document.getElementById('form-loading').classList.remove('flex');
                     
-                    setTimeout(() => {
-                        closeModal();
-                        // Update UI
-                        document.getElementById('already-confirmed').classList.remove('hidden');
-                        document.getElementById('confirmed-details').textContent = `${pasesConfirmados} persona${pasesConfirmados !== 1 ? 's' : ''} confirmada${pasesConfirmados !== 1 ? 's' : ''}`;
-                        document.getElementById('confirm-button').textContent = 'Actualizar Confirmación';
-                        // Reset modal
-                        document.getElementById('modal-loading').classList.remove('active');
-                        document.getElementById('modal-loading').innerHTML = `
-                            <div class="text-center">
-                                <div class="spinner mx-auto mb-4"></div>
-                                <p class="font-playfair text-xl text-evergreen">Confirmando asistencia...</p>
-                            </div>
-                        `;
-                        // Reload page after 1 second
-                        setTimeout(() => {
-                            location.reload();
-                        }, 1000);
-                    }, 2500);
+                    // Actualizar el banner verde con el nuevo conteo
+                    const conf = currentInvitado.pasesConfirmados;
+                    document.getElementById('already-confirmed').classList.remove('hidden');
+                    document.getElementById('confirmed-details').textContent = `${conf} persona${conf !== 1 ? 's' : ''} confirmada${conf !== 1 ? 's' : ''}. Puedes actualizar tu respuesta abajo.`;
+                    
+                    // Reconstruir el formulario con los datos actualizados
+                    buildFormContent();
+                    document.getElementById('form-container').classList.remove('hidden');
+
+                    // Mostrar toast de éxito
+                    showSuccessToast();
                 } else {
+                    document.getElementById('form-loading').classList.add('hidden');
+                    document.getElementById('form-loading').classList.remove('flex');
                     document.getElementById('error-message').textContent = 'Error al confirmar. Intenta nuevamente.';
                     document.getElementById('error-message').classList.remove('hidden');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                document.getElementById('modal-loading').classList.remove('active');
-                document.getElementById('form-content').classList.remove('loading');
+                document.getElementById('form-loading').classList.add('hidden');
+                document.getElementById('form-loading').classList.remove('flex');
                 document.getElementById('error-message').textContent = 'Error de conexión. Intenta nuevamente.';
                 document.getElementById('error-message').classList.remove('hidden');
             }
@@ -1399,35 +1494,6 @@
             loadInvitado();
         });
     </script>
-    <script>
-        (function(){
-            const instruccion = document.getElementById('instruccion-anim');
-            if (!instruccion) return;
-            const confirmBtn = document.getElementById('confirm-button');
 
-            const updateVisibility = () => {
-                if (!confirmBtn) return;
-                const labelEl = confirmBtn.querySelector('.button-label');
-                const text = labelEl ? (labelEl.textContent || '').trim() : (confirmBtn.textContent || '').trim();
-                const visible = text === 'Confirmar Asistencia' && confirmBtn.style.display !== 'none';
-                instruccion.style.display = visible ? 'inline-flex' : 'none';
-                if (visible) {
-                    instruccion.style.opacity = '1';
-                    instruccion.style.transform = 'none';
-                }
-            };
-
-            // Observe text/content/style changes on the confirm button
-            if (confirmBtn) {
-                const mo = new MutationObserver(updateVisibility);
-                mo.observe(confirmBtn, { childList: true, characterData: true, subtree: true, attributes: true });
-                // Also update on clicks (in case handler changes text after click)
-                confirmBtn.addEventListener('click', () => setTimeout(updateVisibility, 50));
-            }
-
-            // Initial check
-            updateVisibility();
-        })();
-    </script>
 </body>
 </html>

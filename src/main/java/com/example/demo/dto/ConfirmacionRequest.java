@@ -67,16 +67,17 @@ public class ConfirmacionRequest {
         this.nombresAdicionales = nombresAdicionales;
     }
     
-    // Inner class para las confirmaciones de personas específicas
     public static class PersonaConfirmacion {
         private Long personaId;
         private boolean confirmado;
+        private boolean rechazado;
         
         public PersonaConfirmacion() {}
         
-        public PersonaConfirmacion(Long personaId, boolean confirmado) {
+        public PersonaConfirmacion(Long personaId, boolean confirmado, boolean rechazado) {
             this.personaId = personaId;
             this.confirmado = confirmado;
+            this.rechazado = rechazado;
         }
         
         public Long getPersonaId() {
@@ -94,12 +95,22 @@ public class ConfirmacionRequest {
         public void setConfirmado(boolean confirmado) {
             this.confirmado = confirmado;
         }
+        
+        public boolean isRechazado() {
+            return rechazado;
+        }
+        
+        public void setRechazado(boolean rechazado) {
+            this.rechazado = rechazado;
+        }
     }
     
     // Inner class para las personas adicionales con ID opcional
     public static class PersonaAdicional {
         private Long personaId; // null si es nueva
         private String nombre;
+        private boolean confirmado;
+        private boolean rechazado;
         
         public PersonaAdicional() {}
         
@@ -122,6 +133,22 @@ public class ConfirmacionRequest {
         
         public void setNombre(String nombre) {
             this.nombre = nombre;
+        }
+        
+        public boolean isConfirmado() {
+            return confirmado;
+        }
+        
+        public void setConfirmado(boolean confirmado) {
+            this.confirmado = confirmado;
+        }
+        
+        public boolean isRechazado() {
+            return rechazado;
+        }
+        
+        public void setRechazado(boolean rechazado) {
+            this.rechazado = rechazado;
         }
     }
 }

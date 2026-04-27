@@ -27,6 +27,9 @@ public class InvitadoPersona {
     private Boolean confirmado = false;
     
     @Column(nullable = false, columnDefinition = "boolean default false")
+    private Boolean rechazado = false;
+    
+    @Column(nullable = false, columnDefinition = "boolean default false")
     private Boolean esAdicional = false;  // True si fue agregado por el invitado, false si fue pre-llenado
     
     @Column(nullable = false, columnDefinition = "boolean default true")
@@ -45,6 +48,7 @@ public class InvitadoPersona {
         this.nombreCompleto = nombreCompleto;
         this.orden = orden;
         this.confirmado = false;
+        this.rechazado = false;
         this.esAdicional = false;
         this.activo = true;
     }
@@ -88,6 +92,14 @@ public class InvitadoPersona {
     
     public void setConfirmado(Boolean confirmado) {
         this.confirmado = confirmado;
+    }
+    
+    public Boolean getRechazado() {
+        return rechazado;
+    }
+    
+    public void setRechazado(Boolean rechazado) {
+        this.rechazado = rechazado;
     }
     
     public Boolean getEsAdicional() {

@@ -240,6 +240,9 @@
                         <button onclick="filterSummary('pendiente')" id="filter-pendiente" class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all bg-grey-cotton text-evergreen">
                             Pendientes
                         </button>
+                        <button onclick="filterSummary('rechazado')" id="filter-rechazado" class="filter-btn px-4 py-2 rounded-full text-sm font-medium transition-all bg-grey-cotton text-evergreen">
+                            Rechazados
+                        </button>
                     </div>
                 </div>
                 <div class="space-y-3" id="summary-list">
@@ -502,16 +505,34 @@
 
         function updateMetrics(metrics){
             document.getElementById('metric-total').textContent=metrics.totalInvitados;
-            document.getElementById('metric-confirmados').textContent=metrics.familiasConfirmadas;
-            document.getElementById('metric-pases').textContent=`${metrics.pasesConfirmados}/${metrics.totalPases}`;
+            
+            // Calculate pases rechazados from all active personas
+            let pasesRechazados = 0;
+            let familiasTotalmenteRechazadas = 0;
+            
+            invitados.forEach(inv => {
+                if (inv.confirmado && inv.pasesConfirmados === 0) {
+                    familiasTotalmenteRechazadas++;
+                }
+                if (inv.personas) {
+                    pasesRechazados += inv.personas.filter(p => p.activo !== false && p.rechazado).length;
+                }
+            });
+            
+            // Show both confirmed and rejected in the metrics
+            document.getElementById('metric-confirmados').innerHTML=`${metrics.familiasConfirmadas} <span class="text-sm opacity-60 font-normal">/ ${familiasTotalmenteRechazadas} rech.</span>`;
+            document.getElementById('metric-pases').innerHTML=`${metrics.pasesConfirmados} <span class="text-sm opacity-60 font-normal">/ ${pasesRechazados} rech.</span>`;
             document.getElementById('metric-porcentaje').textContent=`${Math.round(metrics.porcentajeConfirmacion)}%`;
             
             renderSummary('all');
         }
 
         function filterSummary(filter){
-            document.querySelectorAll('.filter-btn').forEach(btn=>btn.classList.remove('active'));
-            document.getElementById(`filter-${filter}`).classList.add('active');
+            document.querySelectorAll('.filter-btn').forEach(btn=>{
+                if(btn) btn.classList.remove('active');
+            });
+            const filterBtn = document.getElementById(`filter-${filter}`);
+            if(filterBtn) filterBtn.classList.add('active');
             renderSummary(filter);
         }
 
@@ -519,9 +540,11 @@
             let filteredInvitados = invitados;
             
             if(filter === 'confirmado'){
-                filteredInvitados = invitados.filter(inv => inv.confirmado);
+                filteredInvitados = invitados.filter(inv => inv.confirmado && inv.pasesConfirmados > 0);
             } else if(filter === 'pendiente'){
                 filteredInvitados = invitados.filter(inv => !inv.confirmado);
+            } else if(filter === 'rechazado') {
+                filteredInvitados = invitados.filter(inv => inv.confirmado && inv.pasesConfirmados === 0);
             }
             
             const summaryList=document.getElementById('summary-list');
@@ -536,14 +559,35 @@
             }
             
             summaryList.innerHTML=filteredInvitados.map(inv=>{
-                // Solo mostrar personas ACTIVAS y CONFIRMADAS
-                const personasConfirmadas = inv.personas && inv.personas.length > 0 
-                    ? inv.personas.filter(p => p.activo !== false && p.confirmado)
-                    : [];
+                // ACTIVAS
+                const personasActivas = inv.personas ? inv.personas.filter(p => p.activo !== false) : [];
+                
+                const personasConfirmadas = personasActivas.filter(p => p.confirmado);
+                const personasRechazadas = personasActivas.filter(p => p.rechazado);
                     
-                const nombres = personasConfirmadas.length > 0
+                const nombresConf = personasConfirmadas.length > 0
                     ? personasConfirmadas.map(p => p.nombreCompleto).join(', ')
-                    : 'Nombres no especificados';
+                    : 'Ninguno';
+                    
+                const nombresRech = personasRechazadas.length > 0
+                    ? personasRechazadas.map(p => p.nombreCompleto).join(', ')
+                    : '';
+                
+                let badgeClass = 'bg-grey-cotton text-evergreen';
+                let badgeText = 'Pendiente';
+                
+                if (inv.confirmado) {
+                    if (inv.pasesConfirmados === 0) {
+                        badgeClass = 'bg-red-500 text-white';
+                        badgeText = 'Rechazado';
+                    } else if (inv.pasesConfirmados < inv.pasesTotales) {
+                        badgeClass = 'bg-orange-400 text-white';
+                        badgeText = `${inv.pasesConfirmados} conf, ${personasRechazadas.length} rech.`;
+                    } else {
+                        badgeClass = 'bg-seedling text-white';
+                        badgeText = 'Confirmado';
+                    }
+                }
                     
                 return `
                 <div class="py-3 border-b border-grey-cotton last:border-0">
@@ -553,15 +597,21 @@
                             <p class="text-xs text-evergreen opacity-60">${inv.slug}</p>
                         </div>
                         <div class="text-right">
-                            <span class="px-3 py-1 rounded-full text-xs font-medium ${inv.confirmado?'bg-seedling text-white':'bg-grey-cotton text-evergreen'}">
-                                ${inv.confirmado?`${inv.pasesConfirmados} confirmados`:'Pendiente'}
+                            <span class="px-3 py-1 rounded-full text-xs font-medium ${badgeClass}">
+                                ${badgeText}
                             </span>
                         </div>
                     </div>
                     ${inv.confirmado && personasConfirmadas.length > 0 ? `
                         <div class="pl-4 border-l-2 border-seedling mt-2">
-                            <p class="text-xs text-evergreen opacity-70 mb-1">Invitados confirmados:</p>
-                            <p class="text-sm text-evergreen">${nombres}</p>
+                            <p class="text-xs text-evergreen opacity-70 mb-1">Confirmados:</p>
+                            <p class="text-sm text-evergreen">${nombresConf}</p>
+                        </div>
+                    ` : ''}
+                    ${inv.confirmado && personasRechazadas.length > 0 ? `
+                        <div class="pl-4 border-l-2 border-red-400 mt-2">
+                            <p class="text-xs text-evergreen opacity-70 mb-1">No asistirán:</p>
+                            <p class="text-sm text-evergreen opacity-80">${nombresRech}</p>
                         </div>
                     ` : ''}
                 </div>
@@ -571,7 +621,22 @@
 
         function renderInvitados(){
             const list=document.getElementById('invitados-list');
-            list.innerHTML=invitados.map(inv=>`
+            list.innerHTML=invitados.map(inv=> {
+                let badgeHTML = '<span class="px-3 py-1 rounded-full bg-grey-cotton text-evergreen">Pendiente</span>';
+                
+                if (inv.confirmado) {
+                    if (inv.pasesConfirmados === 0) {
+                        badgeHTML = `<span class="px-3 py-1 rounded-full bg-red-500 text-white">Rechazado</span>`;
+                    } else {
+                        const rechazados = inv.personas ? inv.personas.filter(p => p.activo !== false && p.rechazado).length : 0;
+                        badgeHTML = `<span class="px-3 py-1 rounded-full bg-seedling text-white">✓ ${inv.pasesConfirmados} conf.</span>`;
+                        if (rechazados > 0) {
+                            badgeHTML += ` <span class="px-3 py-1 rounded-full bg-red-400 text-white">✗ ${rechazados} rech.</span>`;
+                        }
+                    }
+                }
+                
+                return `
                 <div class="card p-4" data-aos="fade-up">
                     <div class="flex items-start gap-4">
                         <div class="flex-1">
@@ -581,7 +646,7 @@
                                 <span class="px-3 py-1 rounded-full bg-grey-cotton">
                                     🎫 ${inv.pasesTotales} pases
                                 </span>
-                                ${inv.confirmado?`<span class="px-3 py-1 rounded-full bg-seedling text-white">✓ ${inv.pasesConfirmados} confirmados</span>`:'<span class="px-3 py-1 rounded-full bg-grey-cotton text-evergreen">Pendiente</span>'}
+                                ${badgeHTML}
                                 ${inv.telefono?`<span class="px-3 py-1 rounded-full bg-grey-cotton">📱 ${inv.telefono}</span>`:''}
                             </div>
                         </div>
@@ -598,6 +663,7 @@
                                     </button>
                                 `:``}
                             `:''}
+
                             <button onclick="copyLink('${inv.slug}')" 
                                 class="w-10 h-10 rounded-full bg-seedling text-white flex items-center justify-center hover:bg-evergreen transition-all" title="Copiar link">🔗</button>
                             <button onclick="toggleBloqueo(${inv.id},${inv.confirmacionBloqueada})" 
@@ -611,7 +677,8 @@
                         </div>
                     </div>
                 </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
         function renderMensajes(){
