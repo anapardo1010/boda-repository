@@ -542,7 +542,7 @@
     <div id="loading" class="loading">
         <div>
             <div class="spinner mx-auto"></div>
-            <p class="text-evergreen mt-4 text-sm tracking-wide">Cargando invitación...</p>
+            <p id="loading-text" class="text-evergreen mt-4 text-sm tracking-wide">Cargando invitación...</p>
         </div>
     </div>
     
@@ -996,20 +996,37 @@
             document.getElementById('seconds').textContent = seconds;
         }
         
-        async function loadInvitado() {
+        async function loadInvitado(attempt) {
+            attempt = attempt || 1;
+            const MAX_ATTEMPTS = 4;
+            const RETRY_DELAY_MS = 2500;
+
             const urlParams = new URLSearchParams(window.location.search);
             const slug = urlParams.get('id');
             
             if (!slug) {
-                showError();
+                showError('No se encontró esta invitación. Verifica el enlace o contacta a los novios.');
                 return;
             }
             
+            // Update loading message on retries
+            const loadingText = document.getElementById('loading-text');
+            if (attempt > 1 && loadingText) {
+                loadingText.textContent = `Conectando... (intento ${attempt} de ${MAX_ATTEMPTS})`;
+            }
+
             try {
                 const response = await fetch(`${API_BASE_URL}/${slug}`);
-                if (!response.ok) {
-                    showError();
+
+                // True 404/400: the invitation genuinely does not exist
+                if (response.status === 404 || response.status === 400) {
+                    showError('No pudimos encontrar tu invitación. Verifica el enlace o contacta a los novios.');
                     return;
+                }
+
+                // Any other non-OK status (500, 502, 503 …) → retry
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
                 }
                 
                 currentInvitado = await response.json();
@@ -1025,8 +1042,13 @@
                     }
                 });
             } catch (error) {
-                console.error('Error:', error);
-                showError();
+                console.warn(`Intento ${attempt} fallido:`, error);
+                if (attempt < MAX_ATTEMPTS) {
+                    setTimeout(() => loadInvitado(attempt + 1), RETRY_DELAY_MS);
+                } else {
+                    // All attempts exhausted
+                    showError('Tenemos problemas de conexión. Por favor recarga la página en unos segundos.');
+                }
             }
         }
         
@@ -1116,14 +1138,19 @@
             }
         }
         
-        function showError() {
+        function showError(msg) {
             document.getElementById('loading').classList.add('hidden');
             document.getElementById('loading').style.display = 'none';
             document.getElementById('main-content').classList.add('hidden');
             document.getElementById('main-content').style.display = 'none';
-            document.getElementById('error-content').classList.remove('hidden');
-            document.getElementById('error-content').style.display = 'flex';
-            console.log('Error: Invitación no encontrada');
+            const errorDiv = document.getElementById('error-content');
+            if (msg) {
+                const msgEl = errorDiv.querySelector('p');
+                if (msgEl) msgEl.textContent = msg;
+            }
+            errorDiv.classList.remove('hidden');
+            errorDiv.style.display = 'flex';
+            console.warn('Error en invitación:', msg || 'desconocido');
         }
         
         function showModal() {
