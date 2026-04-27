@@ -716,10 +716,10 @@
                                     <svg class="w-5 h-5 text-seedling" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
                                     </svg>
-                                    Pases Adicionales
-                                    <span class="text-xs opacity-70">(opcional)</span>
+                                    <span id="pases-header-text">Pases Adicionales</span>
+                                    <span class="text-xs opacity-70" id="pases-optional-badge">(opcional)</span>
                                 </h4>
-                                <p class="text-xs text-evergreen opacity-70 mb-3">Si utilizarás estos pases, selecciona "Asistiré" e ingresa el nombre de tu acompañante. Si no los utilizarás, selecciona "No asistiré".</p>
+                                <p id="pases-desc-text" class="text-xs text-evergreen opacity-70 mb-3">Si utilizarás estos pases, selecciona "Asistiré" e ingresa el nombre de tu acompañante. Si no los utilizarás, selecciona "No asistiré".</p>
                                 <div id="pases-adicionales-list" class="space-y-3"></div>
                             </div>
                             
@@ -1243,6 +1243,22 @@
             if (pasesAdicionales > 0) {
                 const container = document.getElementById('pases-adicionales-container');
                 const list = document.getElementById('pases-adicionales-list');
+                const headerText = document.getElementById('pases-header-text');
+                const descText = document.getElementById('pases-desc-text');
+                const optionalBadge = document.getElementById('pases-optional-badge');
+                
+                const isGuestOnly = personasPreLlenadas.length === 0;
+                
+                if (isGuestOnly) {
+                    headerText.textContent = 'Invitados';
+                    descText.textContent = 'Por favor indica quiénes nos acompañarán e ingresa sus nombres completos.';
+                    optionalBadge.classList.add('hidden');
+                } else {
+                    headerText.textContent = 'Pases Adicionales';
+                    descText.textContent = 'Si utilizarás estos pases, selecciona "Asistiré" e ingresa el nombre de tu acompañante. Si no los utilizarás, selecciona "No asistiré".';
+                    optionalBadge.classList.remove('hidden');
+                }
+                
                 container.classList.remove('hidden');
                 list.innerHTML = '';
                 
@@ -1260,10 +1276,13 @@
                     const isAccept = status === 'accept';
                     const isDecline = status === 'decline';
                     
+                    const label = isGuestOnly ? `Invitado ${i + 1}` : `Lugar Adicional ${i + 1}`;
+                    const placeholder = isGuestOnly ? "Nombre completo" : "Nombre completo del acompañante";
+                    
                     const card = document.createElement('div');
                     card.className = 'border border-grey-cotton rounded-lg p-4 bg-white';
                     card.innerHTML = `
-                        <p class="text-xs text-evergreen opacity-70 mb-2 font-medium uppercase tracking-wider">Lugar Adicional ${i + 1}</p>
+                        <p class="text-xs text-evergreen opacity-70 mb-2 font-medium uppercase tracking-wider">${label}</p>
                         <div class="flex gap-2 mb-3">
                             <button type="button" 
                                     class="flex-1 py-2 text-sm font-medium rounded-lg border transition-all ${isAccept ? 'bg-seedling text-white border-seedling' : 'bg-white text-evergreen border-grey-cotton hover:bg-grey-cotton'}"
@@ -1281,7 +1300,7 @@
                         <div id="adicional-input-container-${i}" class="${isAccept ? 'block' : 'hidden'}">
                             <input type="text" 
                                    id="adicional-nombre-${i}"
-                                   placeholder="Nombre completo del acompañante"
+                                   placeholder="${placeholder}"
                                    value="${personaExistente ? personaExistente.nombreCompleto : ''}"
                                    class="w-full px-3 py-2 border border-grey-cotton rounded-lg text-sm focus:ring-2 focus:ring-seedling focus:border-transparent">
                         </div>

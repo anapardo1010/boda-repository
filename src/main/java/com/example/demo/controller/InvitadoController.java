@@ -164,7 +164,13 @@ public class InvitadoController {
                 .filter(p -> p.getActivo() && p.getConfirmado())
                 .count();
             invitado.setPasesConfirmados((int) confirmados);
-            invitado.setConfirmado(confirmados > 0);
+            
+            // confirmado = true si al menos una persona RESPONDIÓ (aceptó O rechazó)
+            // Esto permite diferenciar "pendiente" (no han abierto) de "rechazado" (abrieron y dijeron no)
+            long respondieron = invitado.getPersonas().stream()
+                .filter(p -> p.getActivo() && (p.getConfirmado() || p.getRechazado()))
+                .count();
+            invitado.setConfirmado(respondieron > 0);
             
             Invitado guardado = invitadoRepository.save(invitado);
             return ResponseEntity.ok(guardado);

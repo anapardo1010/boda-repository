@@ -544,7 +544,11 @@
             } else if(filter === 'pendiente'){
                 filteredInvitados = invitados.filter(inv => !inv.confirmado);
             } else if(filter === 'rechazado') {
-                filteredInvitados = invitados.filter(inv => inv.confirmado && inv.pasesConfirmados === 0);
+                filteredInvitados = invitados.filter(inv => {
+                    if (!inv.confirmado) return false;
+                    const tieneRechazados = inv.personas && inv.personas.some(p => p.activo !== false && p.rechazado);
+                    return tieneRechazados || inv.pasesConfirmados === 0;
+                });
             }
             
             const summaryList=document.getElementById('summary-list');
