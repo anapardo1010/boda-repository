@@ -214,13 +214,38 @@
                 </div>
                 <div class="card p-6 text-center" data-aos="fade-up" data-aos-delay="200">
                     <div class="text-4xl mb-2">🎫</div>
-                    <p class="text-sm text-evergreen opacity-70 mb-1">Pases</p>
+                    <p class="text-sm text-evergreen opacity-70 mb-1">Pases Totales</p>
                     <p id="metric-pases" class="text-2xl font-playfair text-ebony">0/0</p>
                 </div>
                 <div class="card p-6 text-center" data-aos="fade-up" data-aos-delay="300">
                     <div class="text-4xl mb-2">📊</div>
                     <p class="text-sm text-evergreen opacity-70 mb-1">Asistencia</p>
                     <p id="metric-porcentaje" class="text-3xl font-playfair text-seedling">0%</p>
+                </div>
+            </div>
+
+            <!-- Nuevas métricas de pases adicionales -->
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-8">
+                <div class="card p-4 bg-grey-cotton/50 border-none flex items-center gap-4 transition-transform hover:scale-[1.02]" data-aos="fade-up">
+                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-lg shadow-sm">➕</div>
+                    <div>
+                        <p class="text-[10px] text-evergreen opacity-60 uppercase tracking-widest font-bold">Ofrecidos</p>
+                        <p id="metric-adicionales-total" class="text-xl font-playfair text-ebony">0</p>
+                    </div>
+                </div>
+                <div class="card p-4 bg-seedling/10 border-none flex items-center gap-4 transition-transform hover:scale-[1.02]" data-aos="fade-up" data-aos-delay="100">
+                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-lg shadow-sm">✅</div>
+                    <div>
+                        <p class="text-[10px] text-evergreen opacity-60 uppercase tracking-widest font-bold">Usados</p>
+                        <p id="metric-adicionales-usados" class="text-xl font-playfair text-seedling">0</p>
+                    </div>
+                </div>
+                <div class="card p-4 bg-red-50/50 border-none flex items-center gap-4 transition-transform hover:scale-[1.02]" data-aos="fade-up" data-aos-delay="200">
+                    <div class="w-10 h-10 rounded-full bg-white flex items-center justify-center text-lg shadow-sm">⭕</div>
+                    <div>
+                        <p class="text-[10px] text-evergreen opacity-60 uppercase tracking-widest font-bold">Libres</p>
+                        <p id="metric-adicionales-libres" class="text-xl font-playfair text-red-600">0</p>
+                    </div>
                 </div>
             </div>
 
@@ -506,16 +531,29 @@
         function updateMetrics(metrics){
             document.getElementById('metric-total').textContent=metrics.totalInvitados;
             
-            // Calculate pases rechazados from all active personas
+            // Calculate pases rechazados and additional pass metrics
             let pasesRechazados = 0;
             let familiasTotalmenteRechazadas = 0;
+            let totalAdicionales = 0;
+            let usadosAdicionales = 0;
             
             invitados.forEach(inv => {
                 if (inv.confirmado && inv.pasesConfirmados === 0) {
                     familiasTotalmenteRechazadas++;
                 }
-                if (inv.personas) {
-                    pasesRechazados += inv.personas.filter(p => p.activo !== false && p.rechazado).length;
+                
+                const personasActivas = inv.personas ? inv.personas.filter(p => p.activo !== false) : [];
+                
+                // Metrics for rejected passes
+                pasesRechazados += personasActivas.filter(p => p.rechazado).length;
+                
+                // Metrics for additional passes
+                const especificasCount = personasActivas.filter(p => !p.esAdicional).length;
+                const pasesAdicionalesDeEstaFamilia = Math.max(0, inv.pasesTotales - especificasCount);
+                
+                if (pasesAdicionalesDeEstaFamilia > 0) {
+                    totalAdicionales += pasesAdicionalesDeEstaFamilia;
+                    usadosAdicionales += personasActivas.filter(p => p.esAdicional && p.confirmado).length;
                 }
             });
             
@@ -523,6 +561,11 @@
             document.getElementById('metric-confirmados').innerHTML=`${metrics.familiasConfirmadas} <span class="text-sm opacity-60 font-normal">/ ${familiasTotalmenteRechazadas} rech.</span>`;
             document.getElementById('metric-pases').innerHTML=`${metrics.pasesConfirmados} <span class="text-sm opacity-60 font-normal">/ ${pasesRechazados} rech.</span>`;
             document.getElementById('metric-porcentaje').textContent=`${Math.round(metrics.porcentajeConfirmacion)}%`;
+            
+            // Update additional passes metrics
+            document.getElementById('metric-adicionales-total').textContent = totalAdicionales;
+            document.getElementById('metric-adicionales-usados').textContent = usadosAdicionales;
+            document.getElementById('metric-adicionales-libres').textContent = totalAdicionales - usadosAdicionales;
             
             renderSummary('all');
         }
@@ -628,16 +671,33 @@
             list.innerHTML=invitados.map(inv=> {
                 let badgeHTML = '<span class="px-3 py-1 rounded-full bg-grey-cotton text-evergreen">Pendiente</span>';
                 
+                const personasActivas = inv.personas ? inv.personas.filter(p => p.activo !== false) : [];
+                const especificas = personasActivas.filter(p => !p.esAdicional);
+                const adicionalesConfirmadas = personasActivas.filter(p => p.esAdicional && p.confirmado);
+                const adicionalesRechazadas = personasActivas.filter(p => p.esAdicional && p.rechazado);
+                const pasesAdicionalesTotales = inv.pasesTotales - especificas.length;
+                
                 if (inv.confirmado) {
                     if (inv.pasesConfirmados === 0) {
                         badgeHTML = `<span class="px-3 py-1 rounded-full bg-red-500 text-white">Rechazado</span>`;
                     } else {
-                        const rechazados = inv.personas ? inv.personas.filter(p => p.activo !== false && p.rechazado).length : 0;
+                        const rechazadosTotal = personasActivas.filter(p => p.rechazado).length;
                         badgeHTML = `<span class="px-3 py-1 rounded-full bg-seedling text-white">✓ ${inv.pasesConfirmados} conf.</span>`;
-                        if (rechazados > 0) {
-                            badgeHTML += ` <span class="px-3 py-1 rounded-full bg-red-400 text-white">✗ ${rechazados} rech.</span>`;
+                        if (rechazadosTotal > 0) {
+                            badgeHTML += ` <span class="px-3 py-1 rounded-full bg-red-400 text-white">✗ ${rechazadosTotal} rech.</span>`;
                         }
                     }
+                }
+                
+                let adicionalesHTML = '';
+                if (pasesAdicionalesTotales > 0) {
+                    adicionalesHTML = `
+                        <div class="mt-2 text-xs text-evergreen opacity-70 flex gap-2">
+                            <span>➕ Adicionales: <b>${pasesAdicionalesTotales}</b></span>
+                            <span>✅ Usados: <b>${adicionalesConfirmadas.length}</b></span>
+                            <span>❌ No usados: <b>${pasesAdicionalesTotales - adicionalesConfirmadas.length}</b></span>
+                        </div>
+                    `;
                 }
                 
                 return `
@@ -653,6 +713,7 @@
                                 ${badgeHTML}
                                 ${inv.telefono?`<span class="px-3 py-1 rounded-full bg-grey-cotton">📱 ${inv.telefono}</span>`:''}
                             </div>
+                            ${adicionalesHTML}
                         </div>
                         <div class="flex flex-col gap-2">
                             ${inv.telefono?`
@@ -660,12 +721,10 @@
                                     class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition-all" title="Enviar invitación">
                                     📱
                                 </button>
-                                ${inv.confirmado?`
-                                    <button onclick="sendReconfirmacion('${inv.telefono}','${inv.slug}','${inv.nombreFamilia}',${inv.pasesConfirmados},${inv.pasesTotales})" 
-                                        class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-all" title="Reconfirmar asistencia">
-                                        🔔
-                                    </button>
-                                `:``}
+                                <button onclick="sendReminder('${inv.telefono}','${inv.slug}','${inv.nombreFamilia}',${inv.confirmado},${inv.pasesConfirmados},${inv.pasesTotales})" 
+                                    class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-all" title="Enviar recordatorio">
+                                    🔔
+                                </button>
                             `:''}
 
                             <button onclick="copyLink('${inv.slug}')" 
@@ -731,18 +790,27 @@
             const link=`${APP_URL}/?id=${slug}`;
             const esSingular = pasesTotales === 1;
             const mensaje = esSingular
-                ? `Hola ${nombreFamilia} 🌿\n\nCon mucho cariño e ilusión, te hacemos llegar nuestra invitación digital para invitarte a la celebración de nuestra boda el próximo 27 de junio de 2026. 🌿\n\n✨ Invitación — ${nombreFamilia}:\n${link}\n\nDentro podrás consultar el itinerario, la ubicación y encontrarás un botón para confirmar tu asistencia, donde también podrás escribir tu nombre. ¡No te preocupes si aún no tienes todo definido, puedes editarla cuantas veces necesites! ¡Te esperamos con el corazón!\n\nAna Gabriela & Luis Manuel 💍`
-                : `Hola ${nombreFamilia} 🌿\n\nCon mucho cariño e ilusión, les hacemos llegar nuestra invitación digital para invitarlos a la celebración de nuestra boda el próximo 27 de junio de 2026. 🌿\n\n✨ Invitación — ${nombreFamilia}:\n${link}\n\nDentro podrán consultar el itinerario, la ubicación y encontrarán un botón para confirmar su asistencia, donde también podrán escribir el nombre de cada persona que asistirá. ¡No se preocupen si aún no todos los integrantes lo saben, pueden editarla cuantas veces necesiten! ¡Los esperamos con el corazón!\n\nAna Gabriela & Luis Manuel 💍`;
+                ? `Hola ${nombreFamilia} 🌿\n\nCon mucho cariño e ilusión, te hacemos llegar nuestra invitación digital para invitarte a nuestra boda el 27 de junio de 2026. 💍\n\n✨ Tu Invitación aquí:\n${link}\n\n⚠️ IMPORTANTE: Al abrir el link, busca el botón dorado de "Confirmar Asistencia". Ahí podrás decirnos si nos acompañas e ingresar tu nombre. ¡Puedes editar tu respuesta cuantas veces necesites!\n\nTe esperamos con el corazón,\nAna Gabriela & Luis Manuel 🌿`
+                : `Hola ${nombreFamilia} 🌿\n\nCon mucho cariño e ilusión, les hacemos llegar nuestra invitación digital para invitarlos a nuestra boda el 27 de junio de 2026. 💍\n\n✨ Su Invitación aquí:\n${link}\n\n⚠️ IMPORTANTE: Al abrir el link, busquen el botón dorado de "Confirmar Asistencia". Ahí podrán decirnos quiénes asistirán e ingresar los nombres de cada persona. ¡Pueden editar su respuesta cuantas veces necesiten!\n\nLos esperamos con el corazón,\nAna Gabriela & Luis Manuel 🌿`;
             const whatsappUrl=`https://wa.me/${telefono.replace(/\D/g,'')}?text=${encodeURIComponent(mensaje)}`;
             window.open(whatsappUrl,'_blank');
         }
 
-        function sendReconfirmacion(telefono,slug,nombreFamilia,pasesConfirmados,pasesTotales){
+        function sendReminder(telefono,slug,nombreFamilia,yaConfirmado,pasesConfirmados,pasesTotales){
             const link=`${APP_URL}/?id=${slug}`;
             const esSingular = pasesTotales === 1;
-            const mensaje = esSingular
-                ? `Hola ${nombreFamilia} 🌿\n\n¡Ya falta muy poco para nuestra boda y estamos muy emocionados! 🌿\n\nQueremos recordarte que tienes confirmado ${pasesConfirmados} pase. Si necesitas realizar algún cambio, puedes hacerlo desde tu invitación:\n\n✨ Tu Invitación — ${nombreFamilia}:\n${link}\n\n¡Te esperamos con mucha ilusión el 27 de junio!\n\nAna Gabriela & Luis Manuel 💍`
-                : `Hola ${nombreFamilia} 🌿\n\n¡Ya falta muy poco para nuestra boda y estamos muy emocionados! 🌿\n\nQueremos recordarles que tienen confirmados ${pasesConfirmados} pases. Si necesitan realizar algún cambio, pueden hacerlo desde su invitación:\n\n✨ Su Invitación — ${nombreFamilia}:\n${link}\n\n¡Los esperamos con mucha ilusión el 27 de junio!\n\nAna Gabriela & Luis Manuel 💍`;
+            let mensaje = "";
+
+            if (!yaConfirmado) {
+                mensaje = esSingular
+                    ? `¡Hola ${nombreFamilia}! 🌿 Te escribimos para recordarte que ya puedes confirmar tu asistencia a nuestra boda. Solo tienes que darle clic a este link: ${link} y buscar el botón de "Confirmar Asistencia". Ahí podrás decirnos si nos acompañas y escribir tu nombre. ¡Nos encantaría que estuvieras con nosotros! 💍`
+                    : `¡Hola ${nombreFamilia}! 🌿 Les escribimos para recordarles que ya pueden confirmar su asistencia a nuestra boda. Solo tienen que darle clic a este link: ${link} y buscar el botón de "Confirmar Asistencia". Ahí podrán decirnos quiénes nos acompañarán y escribir sus nombres. ¡Nos encantaría que estuvieran con nosotros! 💍`;
+            } else {
+                mensaje = esSingular
+                    ? `¡Hola ${nombreFamilia}! 🌿 Falta poco para nuestra boda y queremos agradecerte por confirmar tu asistencia. Te recordamos que si necesitas hacer algún cambio o completar tu nombre, puedes hacerlo entrando a tu invitación: ${link} y usando el mismo botón de "Confirmar Asistencia". ¡Te esperamos con mucha ilusión! 💍`
+                    : `¡Hola ${nombreFamilia}! 🌿 Falta poco para nuestra boda y queremos agradecerles por confirmar su asistencia (${pasesConfirmados} pases). Les recordamos que si necesitan hacer algún cambio o completar los nombres de sus acompañantes, pueden hacerlo entrando a su invitación: ${link} y usando el mismo botón de "Confirmar Asistencia". ¡Los esperamos con mucha ilusión! 💍`;
+            }
+
             const whatsappUrl=`https://wa.me/${telefono.replace(/\D/g,'')}?text=${encodeURIComponent(mensaje)}`;
             window.open(whatsappUrl,'_blank');
         }
