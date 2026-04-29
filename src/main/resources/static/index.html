@@ -769,14 +769,14 @@
                             </div>
 
                             <!-- Botones (Contenedor Sticky en móvil) -->
-                            <div class="pt-2 submit-container-sticky">
-                                <p class="text-center text-[10px] uppercase tracking-widest text-seedling font-bold mb-2 animate-bounce">
-                                    👇 No olvides darle clic aquí para guardar
+                            <div class="pt-2 submit-container-sticky flex flex-col items-center">
+                                <p id="submit-hint" class="text-center text-[10px] uppercase tracking-widest text-seedling font-bold mb-2 animate-bounce">
+                                    👆 Selecciona una opción para continuar
                                 </p>
-                                <button type="submit" id="submit-btn"
-                                        class="w-full bg-seedling text-white px-6 py-4 rounded-full font-medium hover:bg-evergreen transition-all shadow-lg text-lg flex items-center justify-center gap-2">
+                                <button type="submit" id="submit-btn" disabled
+                                        class="w-full max-w-[280px] bg-seedling text-white px-6 py-3 rounded-full font-medium hover:bg-evergreen transition-all shadow-lg text-base flex items-center justify-center gap-2 opacity-50 pointer-events-none grayscale">
                                     <span>Enviar Confirmación</span>
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
                                     </svg>
                                 </button>
@@ -1355,6 +1355,7 @@
                 }
             }
             
+            highlightSubmit();
             updateConfirmCount();
         }
         
@@ -1415,19 +1416,36 @@
             updateConfirmCount();
         }
 
-        let hasChanges = false;
         function highlightSubmit() {
+            const anySelection = Array.from(document.querySelectorAll('.guest-status-input, .pase-status-input'))
+                                    .some(input => input.value !== 'pending');
+            
             const btn = document.getElementById('submit-btn');
-            if (!hasChanges) {
-                btn.classList.add('pulse-save');
-                hasChanges = true;
+            const hint = document.getElementById('submit-hint');
+            
+            if (anySelection) {
+                btn.classList.remove('opacity-50', 'pointer-events-none', 'grayscale');
+                btn.disabled = false;
+                hint.textContent = '👇 No olvides darle clic aquí para guardar';
                 
-                // Advertencia al intentar salir
-                window.onbeforeunload = function() {
-                    return "¿Deseas salir sin guardar tu confirmación?";
-                };
+                if (!hasChanges) {
+                    btn.classList.add('pulse-save');
+                    hasChanges = true;
+                    window.onbeforeunload = function() {
+                        return "¿Deseas salir sin guardar tu confirmación?";
+                    };
+                }
+            } else {
+                btn.classList.add('opacity-50', 'pointer-events-none', 'grayscale');
+                btn.disabled = true;
+                btn.classList.remove('pulse-save');
+                hint.textContent = '👆 Selecciona una opción para continuar';
+                hasChanges = false;
+                window.onbeforeunload = null;
             }
         }
+
+        let hasChanges = false;
         
         function updateConfirmCount() {
             const especificosAcceptados = Array.from(document.querySelectorAll('.guest-status-input')).filter(input => input.value === 'accept').length;
