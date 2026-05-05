@@ -80,6 +80,7 @@ public class AdminController {
                     persona.setInvitado(invitado);
                     persona.setEsAdicional(false);
                     persona.setConfirmado(false);
+                    persona.setRechazado(false);
                     persona.setActivo(true);  // Activo por defecto
                 }
             }
@@ -124,6 +125,11 @@ public class AdminController {
             
             // 2. GESTIÓN DE INVITADOS PRINCIPALES (esAdicional=false)
             // Solo el admin gestiona estos - NUNCA tocar los adicionales del usuario
+
+            // 2.0. Protección: corregir valores null de rechazado en entidades cargadas del DB
+            existingInv.getPersonas().forEach(p -> {
+                if (p.getRechazado() == null) p.setRechazado(false);
+            });
             
             // 2.1. Obtener invitados principales actuales (activos)
             List<InvitadoPersona> principalesActuales = existingInv.getPersonas().stream()
@@ -161,6 +167,7 @@ public class AdminController {
                 nueva.setInvitado(existingInv);
                 nueva.setEsAdicional(false);
                 nueva.setConfirmado(false);
+                nueva.setRechazado(false);
                 nueva.setActivo(true);
                 existingInv.getPersonas().add(nueva);
             }
