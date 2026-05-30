@@ -721,9 +721,25 @@
                                     class="w-10 h-10 rounded-full bg-green-500 text-white flex items-center justify-center hover:bg-green-600 transition-all" title="Enviar invitación">
                                     📱
                                 </button>
-                                <button onclick="sendReminder('${inv.telefono}','${inv.slug}','${inv.nombreFamilia}',${inv.confirmado},${inv.pasesConfirmados},${inv.pasesTotales})" 
+                                <button onclick="copyMsgInvitacion('${inv.slug}','${inv.nombreFamilia}',${inv.pasesTotales})" 
+                                    class="w-10 h-10 rounded-full bg-green-200 text-green-800 flex items-center justify-center hover:bg-green-300 transition-all" title="Copiar mensaje de invitación">
+                                    📋
+                                </button>
+                                <button onclick="sendReminder(${inv.id},'${inv.telefono}','${inv.slug}','${inv.nombreFamilia}',${inv.confirmado},${inv.pasesConfirmados},${inv.pasesTotales})" 
                                     class="w-10 h-10 rounded-full bg-blue-500 text-white flex items-center justify-center hover:bg-blue-600 transition-all" title="Enviar recordatorio">
                                     🔔
+                                </button>
+                                <button onclick="copyMsgReminder(${inv.id},'${inv.slug}','${inv.nombreFamilia}',${inv.confirmado},${inv.pasesConfirmados},${inv.pasesTotales})" 
+                                    class="w-10 h-10 rounded-full bg-blue-200 text-blue-800 flex items-center justify-center hover:bg-blue-300 transition-all" title="Copiar mensaje de recordatorio">
+                                    📋
+                                </button>
+                                <button onclick="sendFinalReminder('${inv.telefono}','${inv.slug}','${inv.nombreFamilia}',${inv.pasesTotales})" 
+                                    class="w-10 h-10 rounded-full bg-purple-500 text-white flex items-center justify-center hover:bg-purple-600 transition-all" title="Recordatorio 2 días antes (lugar y hora)">
+                                    🎊
+                                </button>
+                                <button onclick="copyMsgFinal('${inv.slug}','${inv.nombreFamilia}',${inv.pasesTotales})" 
+                                    class="w-10 h-10 rounded-full bg-purple-200 text-purple-800 flex items-center justify-center hover:bg-purple-300 transition-all" title="Copiar recordatorio final">
+                                    📋
                                 </button>
                             `:''}
 
@@ -786,33 +802,74 @@
             `).join('');
         }
 
-        function sendWhatsApp(telefono,slug,nombreFamilia,pasesTotales){
+        function buildMsgInvitacion(slug, nombreFamilia, pasesTotales){
             const link=`${APP_URL}/?id=${slug}`;
-            const esSingular = pasesTotales === 1;
-            const mensaje = esSingular
-                ? `Hola ${nombreFamilia} 🌿\n\nCon mucho cariño e ilusión, te hacemos llegar nuestra invitación digital para invitarte a nuestra boda el 27 de junio de 2026. 💍\n\n✨ Tu Invitación aquí:\n${link}\n\n⚠️ IMPORTANTE: Al abrir el link, busca el botón dorado de "Confirmar Asistencia". Ahí podrás decirnos si nos acompañas e ingresar tu nombre. ¡Puedes editar tu respuesta cuantas veces necesites!\n\nTe esperamos con el corazón,\nAna Gabriela & Luis Manuel 🌿`
-                : `Hola ${nombreFamilia} 🌿\n\nCon mucho cariño e ilusión, les hacemos llegar nuestra invitación digital para invitarlos a nuestra boda el 27 de junio de 2026. 💍\n\n✨ Su Invitación aquí:\n${link}\n\n⚠️ IMPORTANTE: Al abrir el link, busquen el botón dorado de "Confirmar Asistencia". Ahí podrán decirnos quiénes asistirán e ingresar los nombres de cada persona. ¡Pueden editar su respuesta cuantas veces necesiten!\n\nLos esperamos con el corazón,\nAna Gabriela & Luis Manuel 🌿`;
+            const s = pasesTotales === 1;
+            return s
+                ? `Hola, ${nombreFamilia} ✨\n\nEstamos cada vez más cerca de nuestro gran día y nos haría muy felices que nos acompañes.\n\nPara apoyarnos con la organización y el cierre de números con el lugar, necesitamos confirmar tu asistencia lo antes posible.\n\n*Tu invitación es digital, por lo que es necesario ingresar al enlace para registrar tu respuesta.*\n\n*¿Cómo confirmar?*\nToca este enlace: ${link}\n\nVerás los pases asignados a tu nombre. Por favor, selecciona *"Confirmar"* o *"Rechazar"* para cada una de las personas invitadas (si alguien no puede asistir, es de gran ayuda que selecciones el botón de rechazar).\n\nEstamos a muy poco tiempo de cerrar la logística, ¡así que tu respuesta nos ayuda muchísimo! Muchas gracias por tu apoyo.`
+                : `Hola, ${nombreFamilia} ✨\n\nEstamos cada vez más cerca de nuestro gran día y nos haría muy felices que nos acompañen.\n\nPara apoyarnos con la organización y el cierre de números con el lugar, necesitamos confirmar su asistencia lo antes posible.\n\n*Su invitación es digital, por lo que es necesario ingresar al enlace para registrar su respuesta.*\n\n*¿Cómo confirmar?*\nToquen este enlace: ${link}\n\nVerán los pases asignados a sus nombres. Por favor, seleccionen *"Confirmar"* o *"Rechazar"* para cada una de las personas invitadas (si alguien no puede asistir, es de gran ayuda que seleccionen el botón de rechazar).\n\nEstamos a muy poco tiempo de cerrar la logística, ¡así que su respuesta nos ayuda muchísimo! Muchas gracias por su apoyo.`;
+        }
+
+        function buildMsgReminder(invitadoId, slug, nombreFamilia, yaConfirmado, pasesConfirmados, pasesTotales){
+            const link=`${APP_URL}/?id=${slug}`;
+            const s = pasesTotales === 1;
+            if (!yaConfirmado) {
+                return s
+                    ? `Hola, ${nombreFamilia} ✨\n\nEstamos cada vez más cerca de nuestro gran día y nos haría muy felices que nos acompañes.\n\nPara apoyarnos con la organización y el cierre de números con el lugar, necesitamos confirmar tu asistencia lo antes posible.\n\n*Tu invitación es digital, por lo que es necesario ingresar al enlace para registrar tu respuesta.*\n\n*¿Cómo confirmar?*\nToca este enlace: ${link}\n\nVerás los pases asignados a tu nombre. Por favor, selecciona *"Confirmar"* o *"Rechazar"* para cada una de las personas invitadas (si alguien no puede asistir, es de gran ayuda que selecciones el botón de rechazar).\n\nEstamos a muy poco tiempo de cerrar la logística, ¡así que tu respuesta nos ayuda muchísimo! Muchas gracias por tu apoyo.`
+                    : `Hola, ${nombreFamilia} ✨\n\nEstamos cada vez más cerca de nuestro gran día y nos haría muy felices que nos acompañen.\n\nPara apoyarnos con la organización y el cierre de números con el lugar, necesitamos confirmar su asistencia lo antes posible.\n\n*Su invitación es digital, por lo que es necesario ingresar al enlace para registrar su respuesta.*\n\n*¿Cómo confirmar?*\nToquen este enlace: ${link}\n\nVerán los pases asignados a sus nombres. Por favor, seleccionen *"Confirmar"* o *"Rechazar"* para cada una de las personas invitadas (si alguien no puede asistir, es de gran ayuda que seleccionen el botón de rechazar).\n\nEstamos a muy poco tiempo de cerrar la logística, ¡así que su respuesta nos ayuda muchísimo! Muchas gracias por su apoyo.`;
+            } else {
+                const invData = invitados.find(i => i.id === invitadoId);
+                const personasConfirmadas = invData && invData.personas
+                    ? invData.personas.filter(p => p.activo && p.confirmado).map(p => p.nombreCompleto)
+                    : [];
+                const listaConfirmados = personasConfirmadas.length > 0
+                    ? personasConfirmadas.join(', ')
+                    : `${pasesConfirmados} persona${pasesConfirmados !== 1 ? 's' : ''}`;
+                return s
+                    ? `Hola, ${nombreFamilia} ✨\n\nQueremos agradecerte de corazón que ya hayas confirmado tu asistencia para nuestra boda. ¡Nos emociona muchísimo saber que contarás los días con nosotros!\n\nPara asegurarnos de que todo esté perfecto en nuestra lista de invitados y mesas, te compartimos el resumen de tu confirmación:\n\n*Invitado confirmado:* ${listaConfirmados}\n\nSi todo sigue igual, no tienes que hacer nada. Pero si por alguna razón surge un cambio de planes de último momento, recuerda que aún puedes editar tu respuesta entrando a tu invitación aquí:\n${link}\n\n¡Nos vemos muy pronto!`
+                    : `Hola, ${nombreFamilia} ✨\n\nQueremos agradecerles de corazón que ya hayan confirmado su asistencia para nuestra boda. ¡Nos emociona muchísimo saber que contarán los días con nosotros!\n\nPara asegurarnos de que todo esté perfecto en nuestra lista de invitados y mesas, les compartimos el resumen de su confirmación:\n\n*Invitados confirmados:* ${listaConfirmados}\n\nSi todo sigue igual, no tienen que hacer nada. Pero si por alguna razón surge un cambio de planes de último momento, recuerden que aún pueden editar su respuesta entrando a su invitación aquí:\n${link}\n\n¡Nos vemos muy pronto!`;
+            }
+        }
+
+        function buildMsgFinal(slug, nombreFamilia, pasesTotales){
+            const link=`${APP_URL}/?id=${slug}`;
+            const s = pasesTotales === 1;
+            return s
+                ? `¡Llegó la semana, ${nombreFamilia}! 🥳\n\nEstamos a solo dos días de celebrar nuestra boda y no podemos esperar para compartir este momento tan especial contigo.\n\nTe compartimos un breve recordatorio de los detalles:\n\n⛪ *Ceremonia Religiosa:* Casa de la Cristiandad 5:00 pm\n🥂 *Recepción:* Hotel Posada Señorial Salón Aquiahuac 8:00 pm\n\nRecuerda que puedes revisar la ubicación exacta, la mesa de regalos y todos los detalles del evento entrando a tu invitación digital:\n${link}\n\n¡Prepara tus mejores pasos de baile, nos vemos muy pronto!`
+                : `¡Llegó la semana, ${nombreFamilia}! 🥳\n\nEstamos a solo dos días de celebrar nuestra boda y no podemos esperar para compartir este momento tan especial con ustedes.\n\nLes compartimos un breve recordatorio de los detalles:\n\n⛪ *Ceremonia Religiosa:* Casa de la Cristiandad 5:00 pm\n🥂 *Recepción:* Hotel Posada Señorial Salón Aquiahuac 8:00 pm\n\nRecuerden que pueden revisar la ubicación exacta, la mesa de regalos y todos los detalles del evento entrando a su invitación digital:\n${link}\n\n¡Preparen sus mejores pasos de baile, nos vemos muy pronto!`;
+        }
+
+        function sendWhatsApp(telefono,slug,nombreFamilia,pasesTotales){
+            const mensaje = buildMsgInvitacion(slug, nombreFamilia, pasesTotales);
             const whatsappUrl=`https://wa.me/${telefono.replace(/\D/g,'')}?text=${encodeURIComponent(mensaje)}`;
             window.open(whatsappUrl,'_blank');
         }
 
-        function sendReminder(telefono,slug,nombreFamilia,yaConfirmado,pasesConfirmados,pasesTotales){
-            const link=`${APP_URL}/?id=${slug}`;
-            const esSingular = pasesTotales === 1;
-            let mensaje = "";
+        function copyMsgInvitacion(slug, nombreFamilia, pasesTotales){
+            navigator.clipboard.writeText(buildMsgInvitacion(slug, nombreFamilia, pasesTotales))
+                .then(()=>alert('Mensaje de invitación copiado. Pégalo en WhatsApp Web.'));
+        }
 
-            if (!yaConfirmado) {
-                mensaje = esSingular
-                    ? `¡Hola ${nombreFamilia}! 🌿 Te escribimos para recordarte que ya puedes confirmar tu asistencia a nuestra boda. Solo tienes que darle clic a este link: ${link} y buscar el botón de "Confirmar Asistencia". Ahí podrás decirnos si nos acompañas y escribir tu nombre. ¡Nos encantaría que estuvieras con nosotros! 💍`
-                    : `¡Hola ${nombreFamilia}! 🌿 Les escribimos para recordarles que ya pueden confirmar su asistencia a nuestra boda. Solo tienen que darle clic a este link: ${link} y buscar el botón de "Confirmar Asistencia". Ahí podrán decirnos quiénes nos acompañarán y escribir sus nombres. ¡Nos encantaría que estuvieran con nosotros! 💍`;
-            } else {
-                mensaje = esSingular
-                    ? `¡Hola ${nombreFamilia}! 🌿 Falta poco para nuestra boda y queremos agradecerte por confirmar tu asistencia. Te recordamos que si necesitas hacer algún cambio o completar tu nombre, puedes hacerlo entrando a tu invitación: ${link} y usando el mismo botón de "Confirmar Asistencia". ¡Te esperamos con mucha ilusión! 💍`
-                    : `¡Hola ${nombreFamilia}! 🌿 Falta poco para nuestra boda y queremos agradecerles por confirmar su asistencia (${pasesConfirmados} pases). Les recordamos que si necesitan hacer algún cambio o completar los nombres de sus acompañantes, pueden hacerlo entrando a su invitación: ${link} y usando el mismo botón de "Confirmar Asistencia". ¡Los esperamos con mucha ilusión! 💍`;
-            }
-
+        function sendReminder(invitadoId,telefono,slug,nombreFamilia,yaConfirmado,pasesConfirmados,pasesTotales){
+            const mensaje = buildMsgReminder(invitadoId, slug, nombreFamilia, yaConfirmado, pasesConfirmados, pasesTotales);
             const whatsappUrl=`https://wa.me/${telefono.replace(/\D/g,'')}?text=${encodeURIComponent(mensaje)}`;
             window.open(whatsappUrl,'_blank');
+        }
+
+        function copyMsgReminder(invitadoId, slug, nombreFamilia, yaConfirmado, pasesConfirmados, pasesTotales){
+            navigator.clipboard.writeText(buildMsgReminder(invitadoId, slug, nombreFamilia, yaConfirmado, pasesConfirmados, pasesTotales))
+                .then(()=>alert('Mensaje de recordatorio copiado. Pégalo en WhatsApp Web.'));
+        }
+
+        function sendFinalReminder(telefono,slug,nombreFamilia,pasesTotales){
+            const mensaje = buildMsgFinal(slug, nombreFamilia, pasesTotales);
+            const whatsappUrl=`https://wa.me/${telefono.replace(/\D/g,'')}?text=${encodeURIComponent(mensaje)}`;
+            window.open(whatsappUrl,'_blank');
+        }
+
+        function copyMsgFinal(slug, nombreFamilia, pasesTotales){
+            navigator.clipboard.writeText(buildMsgFinal(slug, nombreFamilia, pasesTotales))
+                .then(()=>alert('Mensaje de recordatorio final copiado. Pégalo en WhatsApp Web.'));
         }
 
         function copyLink(slug){
