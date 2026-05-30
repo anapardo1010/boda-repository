@@ -239,7 +239,7 @@ public class AdminController {
      * FILTRADO: Solo personas ACTIVAS y CONFIRMADAS
      */
     @GetMapping("/export-lista")
-    public ResponseEntity<String> exportarLista() {
+    public ResponseEntity<byte[]> exportarLista() {
         List<Invitado> invitados = invitadoRepository.findAll();
         
         StringBuilder csv = new StringBuilder();
@@ -266,12 +266,19 @@ public class AdminController {
             }
         }
         
+        // BOM UTF-8: indica a Excel que el archivo está en UTF-8 (evita tildes corruptas)
+        byte[] bom = new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
+        byte[] content = csv.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+        byte[] body = new byte[bom.length + content.length];
+        System.arraycopy(bom, 0, body, 0, bom.length);
+        System.arraycopy(content, 0, body, bom.length, content.length);
+        
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.parseMediaType("text/csv"));
+        headers.setContentType(MediaType.parseMediaType("text/csv; charset=UTF-8"));
         headers.setContentDispositionFormData("attachment", "lista-invitados-con-mesas.csv");
         
         return ResponseEntity.ok()
             .headers(headers)
-            .body(csv.toString());
+            .body(body);
     }
 }
