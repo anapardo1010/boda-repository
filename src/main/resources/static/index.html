@@ -490,6 +490,95 @@
             text-align: center;
         }
 
+        /* ── Quick Navigation Bar ── */
+        #quick-nav {
+            position: fixed;
+            z-index: 45;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease, transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        #quick-nav.visible {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) !important;
+        }
+        /* Desktop: top bar */
+        @media (min-width: 768px) {
+            #quick-nav {
+                top: 0; left: 0; right: 0;
+                transform: translateY(-100%);
+                background: rgba(249, 250, 251, 0.97);
+                backdrop-filter: blur(14px);
+                -webkit-backdrop-filter: blur(14px);
+                border-bottom: 1px solid rgba(130, 144, 126, 0.18);
+                display: flex;
+                justify-content: center;
+                box-shadow: 0 2px 16px rgba(45, 58, 47, 0.07);
+            }
+        }
+        /* Mobile: bottom tab bar */
+        @media (max-width: 767px) {
+            #quick-nav {
+                bottom: 0; left: 0; right: 0;
+                transform: translateY(100%);
+                background: rgba(255, 255, 255, 0.98);
+                backdrop-filter: blur(14px);
+                -webkit-backdrop-filter: blur(14px);
+                border-top: 1px solid rgba(130, 144, 126, 0.15);
+                display: flex;
+                justify-content: space-around;
+                box-shadow: 0 -4px 24px rgba(45, 58, 47, 0.09);
+                padding-bottom: env(safe-area-inset-bottom, 0px);
+            }
+            /* Push content up so the bottom bar never covers it */
+            body { padding-bottom: 68px; }
+        }
+        .quick-nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.2rem;
+            padding: 0.7rem 1rem;
+            color: var(--evergreen);
+            text-decoration: none;
+            font-size: 0.62rem;
+            font-weight: 500;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            transition: color 0.2s ease;
+            flex: 1;
+            justify-content: center;
+        }
+        @media (min-width: 768px) {
+            .quick-nav-item {
+                flex-direction: row;
+                gap: 0.45rem;
+                font-size: 0.72rem;
+                padding: 0.9rem 2.5rem;
+                flex: 0 0 auto;
+                border-bottom: 2px solid transparent;
+                transition: color 0.2s ease, border-color 0.2s ease;
+            }
+            .quick-nav-item:hover {
+                color: var(--seedling);
+                border-bottom-color: var(--seedling);
+            }
+        }
+        @media (max-width: 767px) {
+            .quick-nav-item:hover, .quick-nav-item:active {
+                color: var(--seedling);
+            }
+        }
+        .quick-nav-item svg {
+            width: 22px;
+            height: 22px;
+            flex-shrink: 0;
+        }
+        @media (min-width: 768px) {
+            .quick-nav-item svg { width: 16px; height: 16px; }
+        }
+
         /* === Toast de éxito === */
         #success-toast {
             position: fixed;
@@ -788,7 +877,7 @@
             </div>
         </section>
         
-        <section class="py-24 px-6" data-aos="fade-up">
+        <section id="itinerario" class="py-24 px-6" data-aos="fade-up">
             <div class="max-w-3xl mx-auto">
                 <h2 class="font-playfair text-4xl md:text-5xl text-center text-ebony mb-16" data-animate-on-scroll>Itinerario</h2>
                 <div class="space-y-6">
@@ -887,7 +976,7 @@
             </div>
         </section>
         
-        <section class="py-24 px-6 bg-grey-cotton" data-aos="fade-up">
+        <section id="mesa-regalos" class="py-24 px-6 bg-grey-cotton" data-aos="fade-up">
             <div class="max-w-3xl mx-auto text-center">
                 <h2 class="font-playfair text-4xl md:text-5xl text-ebony mb-6" data-animate-on-scroll>Mesa de Regalos</h2>
                 <p class="text-evergreen text-base md:text-lg mb-10 max-w-xl mx-auto leading-relaxed" data-animate-on-scroll>
@@ -1022,7 +1111,28 @@
             </div>
         </footer>
     </div>
-    
+
+    <!-- Quick Navigation Bar: aparece al bajar del hero -->
+    <nav id="quick-nav" aria-label="Navegación rápida">
+        <a href="#invitacion" class="quick-nav-item">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>Confirmar</span>
+        </a>
+        <a href="#mesa-regalos" class="quick-nav-item">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 12H4m16 0v6a2 2 0 01-2 2H6a2 2 0 01-2-2v-6m16 0V9a2 2 0 00-2-2h-1M4 12V9a2 2 0 012-2h1m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M9 7h6"/>
+            </svg>
+            <span>Regalos</span>
+        </a>
+        <a href="#itinerario" class="quick-nav-item">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <span>Itinerario</span>
+        </a>
+    </nav>
 
     
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
@@ -1095,15 +1205,25 @@
                 currentInvitado = await response.json();
                 displayInvitado();
                 
-                // Sticky button
+                // Sticky button + Quick nav visibility
+                const quickNav = document.getElementById('quick-nav');
+                const heroHeight = window.innerHeight * 0.75;
                 window.addEventListener('scroll', () => {
                     const stickyBtn = document.getElementById('sticky-confirm-btn');
-                    if (window.scrollY > 800 && !currentInvitado.confirmado) {
-                        stickyBtn.classList.remove('hidden');
-                    } else {
-                        stickyBtn.classList.add('hidden');
+                    if (stickyBtn) {
+                        if (window.scrollY > 800 && !currentInvitado.confirmado) {
+                            stickyBtn.classList.remove('hidden');
+                        } else {
+                            stickyBtn.classList.add('hidden');
+                        }
                     }
-                });
+                    // Show quick nav after scrolling past hero
+                    if (window.scrollY > heroHeight) {
+                        quickNav.classList.add('visible');
+                    } else {
+                        quickNav.classList.remove('visible');
+                    }
+                }, { passive: true });
             } catch (error) {
                 console.warn(`Intento ${attempt} fallido:`, error);
                 if (attempt < MAX_ATTEMPTS) {
