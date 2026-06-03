@@ -493,12 +493,12 @@
         /* ── Quick Navigation Bar ── */
         #quick-nav {
             position: fixed;
-            top: 0; left: 0; right: 0;
-            z-index: 45;
+            bottom: 0; left: 0; right: 0;
+            z-index: 9999;
             background: var(--evergreen);
             display: flex;
             justify-content: center;
-            box-shadow: 0 4px 20px rgba(45, 58, 47, 0.3);
+            box-shadow: 0 -4px 20px rgba(45, 58, 47, 0.4);
         }
         .quick-nav-item {
             display: flex;
@@ -512,7 +512,7 @@
             font-weight: 600;
             letter-spacing: 0.1em;
             text-transform: uppercase;
-            border-bottom: 2px solid transparent;
+            border-top: 2px solid transparent;
             transition: color 0.2s ease, border-color 0.2s ease;
         }
         @media (max-width: 480px) {
@@ -529,7 +529,7 @@
         }
         .quick-nav-item:hover, .quick-nav-item:active {
             color: white;
-            border-bottom-color: var(--seedling);
+            border-top-color: var(--seedling);
         }
         .quick-nav-item svg {
             width: 16px;
@@ -539,10 +539,10 @@
         @media (max-width: 480px) {
             .quick-nav-item svg { width: 20px; height: 20px; }
         }
-        /* Offset page content so nav doesn't cover hero */
-        #main-content > section:first-child { padding-top: 6rem !important; }
+        /* Offset page content so bottom nav doesn't cover last section */
+        #main-content > section:last-child { padding-bottom: 6rem !important; }
         @media (max-width: 480px) {
-            #main-content > section:first-child { padding-top: 5rem !important; }
+            #main-content > section:last-child { padding-bottom: 5rem !important; }
         }
 
         /* === Toast de éxito === */
