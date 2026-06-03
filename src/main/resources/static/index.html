@@ -1244,32 +1244,34 @@
                 // Ocultar también el banner verde, se sustituye por mensaje personalizado
                 document.getElementById('already-confirmed').style.display = 'none';
                 
-                // Caso 1: Hubo confirmación - Mostrar lista de personas confirmadas
-                if (currentInvitado.confirmado && currentInvitado.personas && currentInvitado.personas.length > 0) {
-                    const personasConfirmadas = currentInvitado.personas.filter(p => p.activo !== false && p.confirmado);
-                    if (personasConfirmadas.length > 0) {
-                        const listHtml = personasConfirmadas.map(p => `<li class=\"text-base text-evergreen mb-1\">✓ ${p.nombreCompleto}</li>`).join('');
-                        const section = document.createElement('div');
-                        section.className = 'bg-grey-cotton rounded-xl p-10 text-center mb-8 max-w-xl mx-auto';
-                        section.setAttribute('data-aos', 'fade-up');
-                        section.innerHTML = `
-                            <svg class=\"w-16 h-16 mx-auto mb-4 text-seedling opacity-70\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
-                                <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z\"/>
-                            </svg>
-                            <p class=\"font-playfair text-3xl text-ebony mb-4\">¡Los esperamos con mucha ilusión!</p>
-                            <p class=\"text-evergreen text-base leading-relaxed mb-4\">
-                                Hemos registrado la asistencia de:
-                            </p>
-                            <ul class=\"inline-block text-left space-y-2 mb-4\">${listHtml}</ul>
-                            <p class=\"text-evergreen text-base leading-relaxed italic\">
-                                Será un honor contar con su presencia en nuestro día especial.
-                            </p>
-                        `;
-                        const confirmedDiv = document.getElementById('already-confirmed');
-                        confirmedDiv.parentNode.insertBefore(section, confirmedDiv);
-                    }
+                // Revisar si hay al menos una persona que confirmó asistencia
+                const personasConfirmadas = currentInvitado.personas
+                    ? currentInvitado.personas.filter(p => p.activo !== false && p.confirmado && !p.rechazado)
+                    : [];
+                
+                if (personasConfirmadas.length > 0) {
+                    // Caso 1: Al menos alguien confirmó - Mostrar lista de personas confirmadas
+                    const listHtml = personasConfirmadas.map(p => `<li class=\"text-base text-evergreen mb-1\">✓ ${p.nombreCompleto}</li>`).join('');
+                    const section = document.createElement('div');
+                    section.className = 'bg-grey-cotton rounded-xl p-10 text-center mb-8 max-w-xl mx-auto';
+                    section.setAttribute('data-aos', 'fade-up');
+                    section.innerHTML = `
+                        <svg class=\"w-16 h-16 mx-auto mb-4 text-seedling opacity-70\" fill=\"none\" stroke=\"currentColor\" viewBox=\"0 0 24 24\">
+                            <path stroke-linecap=\"round\" stroke-linejoin=\"round\" stroke-width=\"1.5\" d=\"M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z\"/>
+                        </svg>
+                        <p class=\"font-playfair text-3xl text-ebony mb-4\">¡Los esperamos con mucha ilusión!</p>
+                        <p class=\"text-evergreen text-base leading-relaxed mb-4\">
+                            Hemos registrado la asistencia de:
+                        </p>
+                        <ul class=\"inline-block text-left space-y-2 mb-4\">${listHtml}</ul>
+                        <p class=\"text-evergreen text-base leading-relaxed italic\">
+                            Será un honor contar con su presencia en nuestro día especial.
+                        </p>
+                    `;
+                    const confirmedDiv = document.getElementById('already-confirmed');
+                    confirmedDiv.parentNode.insertBefore(section, confirmedDiv);
                 } else {
-                    // Caso 2: NO hubo confirmación - Mostrar mensaje empático
+                    // Caso 2: Todos rechazaron o nadie llenó - Mostrar mensaje empático
                     const section = document.createElement('div');
                     section.className = 'bg-grey-cotton rounded-xl p-10 text-center mb-8 max-w-xl mx-auto';
                     section.setAttribute('data-aos', 'fade-up');
