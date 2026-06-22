@@ -832,20 +832,77 @@
         }
 
         function buildMsgFinal(invitadoId, slug, nombreFamilia, pasesConfirmados, pasesTotales){
-            const link=`${APP_URL}/?id=${slug}`;
-            const s = pasesTotales === 1;
-            const invData = invitados.find(i => i.id === invitadoId);
-            const personasConfirmadas = invData && invData.personas
-                ? invData.personas.filter(p => p.activo && p.confirmado).map(p => p.nombreCompleto)
-                : [];
-            const listaConfirmados = personasConfirmadas.length > 0
-                ? personasConfirmadas.join(', ')
-                : `${pasesConfirmados} persona${pasesConfirmados !== 1 ? 's' : ''}`;
-            return s
-                ? `¡Llegó la semana, ${nombreFamilia}! 🥳\n\n¡Ya casi es nuestro gran día y no podemos esperar para compartir este momento tan especial contigo!\n\nTe compartimos un breve recordatorio de los detalles:\n\n⛪ *Ceremonia Religiosa:* Casa de la Cristiandad 4:45 pm\n🥂 *Recepción:* Hotel Posada Señorial Salón Aquiahuac 8:00 pm\n\n*Tu lugar está confirmado a nombre de:* ${listaConfirmados}\n\nAl llegar al salón, solo menciona tu nombre en la entrada y con gusto te ubicarán en tu lugar. 😊\n\nEsta semana estaremos cerrando de manera definitiva la organización de mesas y espacios para nuestros invitados.\n\nSi por alguna razón surgiera algún inconveniente o hubiera algún cambio en tus planes, te agradeceríamos mucho que nos lo hicieras saber respondiendo a este mensaje de WhatsApp al *+52 222 311 0061*. \n\nRecuerda que puedes revisar la ubicación exacta, la mesa de regalos y todos los detalles entrando a tu invitación digital:\n${link}\n\n¡Prepara tus mejores pasos de baile, nos vemos muy pronto! 🎉`
-                : `¡Llegó la semana, ${nombreFamilia}! 🥳\n\n¡Ya casi es nuestro gran día y no podemos esperar para compartir este momento tan especial con ustedes!\n\nLes compartimos un breve recordatorio de los detalles:\n\n⛪ *Ceremonia Religiosa:* Casa de la Cristiandad 4:45 pm\n🥂 *Recepción:* Hotel Posada Señorial Salón Aquiahuac 8:00 pm\n\n*Sus lugares están confirmados a nombre de:* ${listaConfirmados}\n\nAl llegar al salón, solo mencionen sus nombres en la entrada y con gusto los ubicarán en sus lugares. 😊\n\nEsta semana estaremos cerrando de manera definitiva la organización de mesas y espacios para nuestros invitados.\n\nSi por alguna razón surgiera algún inconveniente o hubiera algún cambio en sus planes, les agradeceríamos mucho que nos lo hicieran saber respondiendo a este mensaje de WhatsApp al *+52 222 311 0061*. \n\nRecuerden que pueden revisar la ubicación exacta, la mesa de regalos y todos los detalles entrando a su invitación digital:\n${link}\n\n¡Preparen sus mejores pasos de baile, nos vemos muy pronto! 🎉`;
+    const link = `${APP_URL}/?id=${slug}`;
+    const s = pasesTotales === 1;
 
-        }
+    const invData = invitados.find(i => i.id === invitadoId);
+
+    const personasConfirmadas = invData && invData.personas
+        ? invData.personas
+            .filter(p => p.activo && p.confirmado)
+            .map(p => p.nombreCompleto)
+        : [];
+
+    const listaConfirmados = personasConfirmadas.length > 0
+        ? personasConfirmadas.map(p => `• ${p}`).join('\n')
+        : `• ${pasesConfirmados} persona${pasesConfirmados !== 1 ? 's' : ''}`;
+
+    return s
+        ? `¡Hola ${nombreFamilia}! 🥳
+
+¡Ya llegó la semana de nuestra boda y estamos muy emocionados de compartir este momento tan especial contigo! ❤️
+
+━━━━━━━━━━━━━━
+✨ *INVITADO CONFIRMADO* ✨
+━━━━━━━━━━━━━━
+
+${listaConfirmados}
+
+⚠️ Si surgiera algún contratiempo o hubiera algún cambio en tus planes, te agradeceríamos mucho que nos lo hicieras saber enviando un mensaje de WhatsApp al *+52 222 311 0061*, ya que esta semana estaremos cerrando de forma definitiva la organización de mesas y lugares.
+
+📅 *DETALLES DEL EVENTO*
+
+⛪ *Ceremonia Religiosa*
+Casa de la Cristiandad
+🕓 4:45 pm
+
+🥂 *Recepción*
+Hotel Posada Señorial - Salón Aquiahuac
+🕗 8:00 pm
+
+🔗 En tu invitación digital podrás consultar la ubicación exacta, mesa de regalos y toda la información del evento:
+
+${link}
+
+¡Nos dará muchísima alegría verte y celebrar juntos! 🎉`
+        : `¡Hola ${nombreFamilia}! 🥳
+
+¡Ya llegó la semana de nuestra boda y estamos muy emocionados de compartir este momento tan especial con ustedes! ❤️
+
+━━━━━━━━━━━━━━
+✨ *INVITADOS CONFIRMADOS* ✨
+━━━━━━━━━━━━━━
+
+${listaConfirmados}
+
+⚠️ Si alguno de los invitados confirmados tuviera algún contratiempo o hubiera algún cambio en sus planes, les agradeceríamos mucho que nos lo hicieran saber enviando un mensaje de WhatsApp al *+52 222 311 0061*, ya que esta semana estaremos cerrando de forma definitiva la organización de mesas y lugares.
+
+📅 *DETALLES DEL EVENTO*
+
+⛪ *Ceremonia Religiosa*
+Casa de la Cristiandad
+🕓 4:45 pm
+
+🥂 *Recepción*
+Hotel Posada Señorial - Salón Aquiahuac
+🕗 8:00 pm
+
+🔗 En su invitación digital podrán consultar la ubicación exacta, mesa de regalos y toda la información del evento:
+
+${link}
+
+¡Nos dará muchísima alegría verlos y celebrar juntos! 🎉`;
+}
 
         function sendWhatsApp(telefono,slug,nombreFamilia,pasesTotales){
             const mensaje = buildMsgInvitacion(slug, nombreFamilia, pasesTotales);
